@@ -47,7 +47,6 @@
         android:ems="12"
         android:inputType="number"
         android:text="1234567890"
-        android:textAlignment="center"
-        android:textSize="@dimen/abc_dialog_padding_material" />
+        android:textAlignment="center"></EditText>
 
 </RelativeLayout>
