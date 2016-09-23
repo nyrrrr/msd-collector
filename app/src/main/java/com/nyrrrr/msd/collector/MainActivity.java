@@ -10,7 +10,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     SensorManager sensorManager;
-    List<Sensor> sensorList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,9 +17,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL);
-        SensorReader sra = new SensorReader(sensorList);
-        sra.printListOfAvailableSensors();
+        SensorReader sra = new SensorReader(sensorManager);
+//        sra.printListOfAvailableSensors(Sensor.TYPE_ACCELEROMETER);
+        sra.printInfoOfServices(Sensor.TYPE_ACCELEROMETER);
     }
 
 }
