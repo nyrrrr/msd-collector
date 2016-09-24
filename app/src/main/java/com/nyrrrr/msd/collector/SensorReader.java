@@ -15,6 +15,7 @@ public class SensorReader {
 
     private SensorManager oSensorManager;
     List<Sensor> oSensorList;
+    SensorData oSensorData;
 
     /**
      * constructor
@@ -91,8 +92,7 @@ public class SensorReader {
     }
 
     public void printSensorEventInformation(SensorEvent pEvent) {
-        Log.d("Event Sensor", pEvent.sensor.getName()+"");
-        Log.d("Event accurcary", pEvent.accuracy+"");
-        Log.d("Event values", "x: " + pEvent.values[0]+", y: " + pEvent.values[1] + ", z: " + pEvent.values[2] +  "");
+        oSensorData = new SensorData(pEvent, 0); // TODO find out where to get the current used sample rate
+        oSensorData.print();
     }
 }

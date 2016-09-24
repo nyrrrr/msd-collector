@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager.registerListener(this, oAcceleroMeter, SensorManager.SENSOR_DELAY_UI);
     }
 
+    int slow = 0;
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
