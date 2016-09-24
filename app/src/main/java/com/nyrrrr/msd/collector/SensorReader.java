@@ -13,11 +13,8 @@ import java.util.List;
 
 public class SensorReader {
 
-    boolean isAccelerometerAvailable = false;
-    boolean isAccelerometerActivated = false;
-
-    SensorManager sensorManager;
-    List<Sensor> sensorList;
+    private SensorManager oSensorManager;
+    List<Sensor> oSensorList;
 
     /**
      * constructor
@@ -25,8 +22,12 @@ public class SensorReader {
      * @param pSensorManager
      */
     public SensorReader(SensorManager pSensorManager) {
-        //this.sensorList = sensorList;
-        this.sensorManager = pSensorManager;
+        //this.oSensorList = oSensorList;
+        this.oSensorManager = pSensorManager;
+    }
+
+    Sensor getSingleSensorOfType(int pSensorType) {
+        return oSensorManager.getDefaultSensor(pSensorType);
     }
 
     /**
@@ -35,12 +36,12 @@ public class SensorReader {
      * @param pSensorType
      */
     public void printListOfAvailableSensors(int pSensorType) {
-        sensorList = this.getSensorsOfType(pSensorType);
+        oSensorList = this.getSensorsOfType(pSensorType);
 
-        for (Sensor s : this.sensorList) {
+        for (Sensor s : this.oSensorList) {
             Log.d("Sensor info", s.getName());
         }
-        Log.d("Sensor info", sensorList.size() + "");
+        Log.d("Sensor info", oSensorList.size() + "");
     }
 
     /**
@@ -50,10 +51,10 @@ public class SensorReader {
      */
     public void printInfoOfServices(int pSensorType) {
         // get sensors
-        sensorList = this.getSensorsOfType(pSensorType);
+        oSensorList = this.getSensorsOfType(pSensorType);
 
         // print details
-        for (Sensor s : sensorList) {
+        for (Sensor s : oSensorList) {
             Log.d("Sensor Name", s.getName());
             Log.d("Sensor Vendor", s.getVendor());
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -86,6 +87,12 @@ public class SensorReader {
      * @return List<Sensor>
      */
     private List<Sensor> getSensorsOfType(int pSensorType) {
-        return sensorManager.getSensorList(pSensorType);
+        return oSensorManager.getSensorList(pSensorType);
+    }
+
+    public void printSensorEventInformation(SensorEvent pEvent) {
+        Log.d("Event Sensor", pEvent.sensor.getName()+"");
+        Log.d("Event accurcary", pEvent.accuracy+"");
+        Log.d("Event values", "x: " + pEvent.values[0]+", y: " + pEvent.values[1] + ", z: " + pEvent.values[2] +  "");
     }
 }
