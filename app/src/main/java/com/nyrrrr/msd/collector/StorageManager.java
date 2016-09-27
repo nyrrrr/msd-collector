@@ -13,6 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
+ * Saves data on phone
  * Created by nyrrrr on 27.09.2016.
  */
 
@@ -20,7 +21,7 @@ public class StorageManager {
 
     private static StorageManager oInstance = null;
     private final String STRING_FILE_NAME = "msd-data.json";
-    JSONObject oData;
+    public JSONObject oData;
 
     /*
         temporary vars
@@ -45,8 +46,9 @@ public class StorageManager {
      * Create and save data file (msd-data.json)
      *
      * @param pAppContext
+     * @return JSON data object
      */
-    public JSONObject createAndSaveFile(Context pAppContext) {
+    public JSONObject saveFile(Context pAppContext) {
         if (oData == null) {
             oData = new JSONObject();
         }
@@ -61,10 +63,21 @@ public class StorageManager {
         return oData;
     }
 
+    // TODO remove, debug-only
+    public JSONObject saveFile(Context pAppContext, boolean pDebug) {
+        oData = this.saveFile(pAppContext);
+        try {
+            Log.d("JSON Write debug", oData.toString(4));
+        } catch (JSONException e) {
+            Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
+        }
+        return oData;
+    }
+
     /**
      * Get data from JSON file
      * @param pAppContext
-     * @return
+     * @return JSON data object
      */
     public JSONObject getDataFromFile(Context pAppContext) {
         try {
@@ -83,5 +96,20 @@ public class StorageManager {
             Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
         }
         return null;
+    }
+
+    // TODO remove, debug-only
+    public JSONObject getDataFromFIle ( Context pAppContext, boolean pDebug) {
+        oData = this.getDataFromFile(pAppContext);
+        try {
+            Log.d("JSON Read debug", oData.toString(4));
+        } catch (JSONException e) {
+            Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
+        }
+        return oData;
+    }
+
+    public void setDataObject(JSONObject oData) {
+        this.oData = oData;
     }
 }
