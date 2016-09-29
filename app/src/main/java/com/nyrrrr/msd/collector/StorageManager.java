@@ -99,7 +99,7 @@ public class StorageManager {
     }
 
     // TODO remove, debug-only
-    public JSONObject getDataFromFIle ( Context pAppContext, boolean pDebug) {
+    public JSONObject getDataFromFile ( Context pAppContext, boolean pDebug) {
         oData = this.getDataFromFile(pAppContext);
         try {
             Log.d("JSON Read debug", oData.toString(4));

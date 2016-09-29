@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void testPersistence() {
         oStorageManager = StorageManager.getInstance();
         oStorageManager.saveFile(getApplicationContext(), true);
-        oStorageManager.getDataFromFIle(getApplicationContext(), true);
+        oStorageManager.getDataFromFile(getApplicationContext(), true);
         try {
             oStorageManager.setDataObject(new JSONObject("{test: { a:1, b:2}}"));
             oStorageManager.saveFile(getApplicationContext(), true);
