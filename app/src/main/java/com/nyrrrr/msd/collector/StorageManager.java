@@ -14,6 +14,8 @@ import java.io.IOException;
 
 /**
  * Saves data on phone
+ * Currently saves the data in JSON. I might reconsider this format.
+ * TODO SQLite might make more sense for this task.
  * Created by nyrrrr on 27.09.2016.
  */
 
@@ -48,7 +50,7 @@ public class StorageManager {
      * @param pAppContext
      * @return JSON data object
      */
-    public JSONObject saveFile(Context pAppContext) {
+    public JSONObject storeData(Context pAppContext) {
         if (oData == null) {
             oData = new JSONObject();
         }
@@ -64,8 +66,8 @@ public class StorageManager {
     }
 
     // TODO remove, debug-only
-    public JSONObject saveFile(Context pAppContext, boolean pDebug) {
-        oData = this.saveFile(pAppContext);
+    public JSONObject storeData(Context pAppContext, boolean pDebug) {
+        oData = this.storeData(pAppContext);
         try {
             Log.d("JSON Write debug", oData.toString(4));
         } catch (JSONException e) {
@@ -79,7 +81,7 @@ public class StorageManager {
      * @param pAppContext
      * @return JSON data object
      */
-    public JSONObject getDataFromFile(Context pAppContext) {
+    public JSONObject restoreData(Context pAppContext) {
         try {
             File file = new File(pAppContext.getFilesDir().getPath() + "/" + STRING_FILE_NAME);
             FileInputStream fileInputStream = new FileInputStream(file);
@@ -99,8 +101,8 @@ public class StorageManager {
     }
 
     // TODO remove, debug-only
-    public JSONObject getDataFromFile ( Context pAppContext, boolean pDebug) {
-        oData = this.getDataFromFile(pAppContext);
+    public JSONObject restoreData(Context pAppContext, boolean pDebug) {
+        oData = this.restoreData(pAppContext);
         try {
             Log.d("JSON Read debug", oData.toString(4));
         } catch (JSONException e) {

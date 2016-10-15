@@ -7,6 +7,7 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.OrientationEventListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,17 +20,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorReader oSensorReader;
     StorageManager oStorageManager;
 
+    OrientationEventListener oOrientationEventListener;
+
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(false) handleSensors();
-        if(true) testPersistence();
+        //setUpAccelerometerSensor();
+        //testPersistence();
+        setUpOrientationSensor();
     }
 
-    int slow = 0;
-
+    /**
+     * Detects when sensor values change and reacts
+     * NOTE: currently it reacts to every single change
+     * TODO: only collect data when user taps number on keyboard
+     * @param event
+     */
     @Override
     public void onSensorChanged(SensorEvent event) {
         if(oSensorReader != null) {
@@ -38,31 +46,53 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    /**
+     * TODO: determine sensors accuracy and frequency and make sure it stays constant
+     * @param sensor
+     * @param accuracy
+     */
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
 
     /**
-     * method only extracted for testing
+     * set up orientation sensor needed for ensuring that the orientation is kept
      */
-    private void handleSensors() {
+    private void setUpOrientationSensor() {
+        oOrientationEventListener = new OrientationEventListener(
+                getApplicationContext(), SensorManager.SENSOR_DELAY_UI) {
+            @Override
+            public void onOrientationChanged(int pOrientation) {
+                Log.d("orientation changed", pOrientation+"");
+            }
+        };
+        if(oOrientationEventListener.canDetectOrientation()) oOrientationEventListener.enable();
+    }
+
+    /**
+     * sets up the accelerometer for listening to sensor data
+     */
+    private void setUpAccelerometerSensor() {
         oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
 
         oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_ACCELEROMETER);
         // TODO check if right position in code to do this
-        oSensorManager.registerListener(this, oAcceleroMeter, SensorManager.SENSOR_DELAY_UI);
+        oSensorManager.registerListener(this, oAcceleroMeter, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
+    /**
+     * only in for testing (so-far)
+     */
     private void testPersistence() {
         oStorageManager = StorageManager.getInstance();
-        oStorageManager.saveFile(getApplicationContext(), true);
-        oStorageManager.getDataFromFile(getApplicationContext(), true);
+        oStorageManager.storeData(getApplicationContext(), true);
+        oStorageManager.restoreData(getApplicationContext(), true);
         try {
             oStorageManager.setDataObject(new JSONObject("{test: { a:1, b:2}}"));
-            oStorageManager.saveFile(getApplicationContext(), true);
+            oStorageManager.storeData(getApplicationContext(), true);
         } catch (JSONException e) {
             Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
         }
