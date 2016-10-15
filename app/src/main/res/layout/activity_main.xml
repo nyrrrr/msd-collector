@@ -9,6 +9,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.nyrrrr.msd.collector.MainActivity">
 
+
     <TextView
         android:id="@+id/instructionText"
         android:layout_width="wrap_content"
@@ -45,8 +46,10 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="93dp"
         android:ems="12"
-        android:inputType="number"
         android:text="1234567890"
-        android:textAlignment="center"></EditText>
+        android:textAlignment="center"
+        android:visibility="visible"
+        android:digits="1234567890"
+        android:inputType="numberPassword"></EditText>
 
 </RelativeLayout>
