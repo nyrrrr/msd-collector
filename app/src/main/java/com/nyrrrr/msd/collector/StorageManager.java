@@ -65,7 +65,7 @@ public class StorageManager {
         return oData;
     }
 
-    // TODO remove, debug-only
+    // debug-only
     public JSONObject storeData(Context pAppContext, boolean pDebug) {
         oData = this.storeData(pAppContext);
         try {
@@ -100,7 +100,7 @@ public class StorageManager {
         return null;
     }
 
-    // TODO remove, debug-only
+    // debug-only
     public JSONObject restoreData(Context pAppContext, boolean pDebug) {
         oData = this.restoreData(pAppContext);
         try {

@@ -4,8 +4,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.OrientationEventListener;
 
@@ -29,18 +29,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //setUpAccelerometerSensor();
         //testPersistence();
-        setUpOrientationSensor();
+        //TODO continue here setUpOrientationSensor();
     }
 
     /**
      * Detects when sensor values change and reacts
      * NOTE: currently it reacts to every single change
      * TODO: only collect data when user taps number on keyboard
+     *
      * @param event
      */
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if(oSensorReader != null) {
+        if (oSensorReader != null) {
             if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
             oSensorReader.printSensorEventInformation(event);
         }
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /**
      * TODO: determine sensors accuracy and frequency and make sure it stays constant
+     *
      * @param sensor
      * @param accuracy
      */
@@ -61,13 +63,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void setUpOrientationSensor() {
         oOrientationEventListener = new OrientationEventListener(
-                getApplicationContext(), SensorManager.SENSOR_DELAY_UI) {
+                getApplicationContext(), SensorManager.SENSOR_DELAY_FASTEST) {
             @Override
             public void onOrientationChanged(int pOrientation) {
-                Log.d("orientation changed", pOrientation+"");
+                // TODO refine values
+                if ((pOrientation < 65 || pOrientation > 115) && pOrientation != -1) {
+                    Log.e("MOVE PHONE", "Phone not in right orientation mode");
+                    // TODO prevent the user from putting in wrong values
+                } else {
+                    Log.d("orientation changed", pOrientation + "");
+                    // actually do nothing
+                }
             }
         };
-        if(oOrientationEventListener.canDetectOrientation()) oOrientationEventListener.enable();
+        if (oOrientationEventListener.canDetectOrientation()) {
+            oOrientationEventListener.enable();
+        }
     }
 
     /**
@@ -77,9 +88,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-
         oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_ACCELEROMETER);
-        // TODO check if right position in code to do this
         oSensorManager.registerListener(this, oAcceleroMeter, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
