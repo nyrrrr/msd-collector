@@ -7,6 +7,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.OrientationEventListener;
 
 import org.json.JSONException;
@@ -22,6 +23,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     OrientationEventListener oOrientationEventListener;
 
+    /*
+     * standard methods
+     * ---------------------------------------------------------------------------------------------
+     */
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,6 +36,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //testPersistence();
         //TODO continue here setUpOrientationSensor();
     }
+
+    @Override
+    public boolean onKeyUp(int pKeyCode, KeyEvent pKeyEvent) {
+
+        if (pKeyCode >= 7 && pKeyCode <= 16) {
+            // TODO do something
+
+            return true;
+        }
+
+        return false;
+    }
+
+
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        Log.d("START", System.currentTimeMillis() + "");
+//    }
+//
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        Log.d("RESUME", System.currentTimeMillis() + "");
+//    }
+//
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        Log.d("PAUSE", System.currentTimeMillis() + "");
+//    }
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        Log.d("STOP", System.currentTimeMillis() + "");
+//    }
 
     /**
      * Detects when sensor values change and reacts
@@ -57,6 +99,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
+
+    /*
+     * custom methods
+     * ---------------------------------------------------------------------------------------------
+     */
 
     /**
      * set up orientation sensor needed for ensuring that the orientation is kept
@@ -106,4 +153,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
         }
     }
+
+    /*
+     * helper methods
+     * ---------------------------------------------------------------------------------------------
+     */
+//    TODO does not work for some reason, fix later
+//    private void initializeUI() {
+//        oEditText = (EditText) findViewById (R.id.codeSequenceNumberInput);
+//        Log.d("password", oEditText.getText().toString());
+//        oEditText.setTransformationMethod(PasswordTransformationMethod.getInstance());
+//    }
 }
