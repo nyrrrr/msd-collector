@@ -1,9 +1,12 @@
 package com.nyrrrr.msd.collector;
 
-import android.hardware.*;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,8 +17,10 @@ import java.util.List;
 public class SensorReader {
 
     private SensorManager oSensorManager;
-    List<Sensor> oSensorList;
-    SensorData oSensorData;
+    private List<Sensor> oSensorList;
+    private SensorData oSensorData; // TODO do I rly need this?
+
+    private List<SensorData> oSensorDataList;
 
     /**
      * constructor
@@ -23,18 +28,55 @@ public class SensorReader {
      * @param pSensorManager
      */
     public SensorReader(SensorManager pSensorManager) {
-        //this.oSensorList = oSensorList;
         this.oSensorManager = pSensorManager;
+        oSensorDataList = new ArrayList<SensorData>();
+    }
+
+    /**
+     * puts captured data into a list for later storage (and removal of unneeded objects)
+     * @param pEvent sensor data event
+     * @param pOrientation orientation during capture
+     * @param pKeyCode key pressed (if any)
+     * @return SensorData object
+     */
+    public SensorData addSensorDataLog(SensorEvent pEvent, int pOrientation, int pKeyCode) {
+        oSensorData = new SensorData(pEvent, pOrientation, pKeyCode);
+        if (oSensorDataList.add(oSensorData)) return oSensorData;
+        return null;
     }
 
     Sensor getSingleSensorOfType(int pSensorType) {
         return oSensorManager.getDefaultSensor(pSensorType);
     }
 
+
+    /**
+     * get all sensors of a certain type
+     *
+     * @param pSensorType TYPE_ALL for all sensors
+     * @return List<Sensor>
+     */
+    private List<Sensor> getSensorsOfType(int pSensorType) {
+        return oSensorManager.getSensorList(pSensorType);
+    }
+
+
+    /**
+     * @param pEvent
+     * @// TODO: 16.10.2016 remove or alter
+     * @deprecated
+     */
+    public void printSensorEventInformation(SensorEvent pEvent) {
+        oSensorData = new SensorData(pEvent, -1, -1, -1); // DEPRECATED
+        oSensorData.print();
+    }
+
     /**
      * print all available sensors of type
      *
      * @param pSensorType
+     * @// TODO: 16.10.2016 remove
+     * @deprecated remove
      */
     public void printListOfAvailableSensors(int pSensorType) {
         oSensorList = this.getSensorsOfType(pSensorType);
@@ -49,6 +91,8 @@ public class SensorReader {
      * print service info to console
      *
      * @param pSensorType
+     * @// TODO: 16.10.2016 remove
+     * @deprecated remove
      */
     public void printInfoOfServices(int pSensorType) {
         // get sensors
@@ -81,18 +125,4 @@ public class SensorReader {
         }
     }
 
-    /**
-     * get all sensors of a certain type
-     *
-     * @param pSensorType TYPE_ALL for all sensors
-     * @return List<Sensor>
-     */
-    private List<Sensor> getSensorsOfType(int pSensorType) {
-        return oSensorManager.getSensorList(pSensorType);
-    }
-
-    public void printSensorEventInformation(SensorEvent pEvent) {
-        oSensorData = new SensorData(pEvent, 0); // TODO find out where to get the current used sample rate
-        oSensorData.print();
-    }
 }

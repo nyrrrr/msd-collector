@@ -15,13 +15,17 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    SensorManager oSensorManager;
-    Sensor oAcceleroMeter;
+    private final boolean IS_IN_DEBUG_MODE = false;
 
-    SensorReader oSensorReader;
-    StorageManager oStorageManager;
+    private SensorManager oSensorManager;
+    private Sensor oAcceleroMeter;
+    private SensorReader oSensorReader;
+    private StorageManager oStorageManager;
 
-    OrientationEventListener oOrientationEventListener;
+    private OrientationEventListener oOrientationEventListener;
+
+    private int iKeyCodeLogVar = -1;
+    private int iOrientationLogVar = -1;
 
     /*
      * standard methods
@@ -32,71 +36,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //setUpAccelerometerSensor();
+        setUpAccelerometerSensor();
         //testPersistence();
-        //TODO continue here setUpOrientationSensor();
+        setUpOrientationSensor();
     }
 
     @Override
     public boolean onKeyUp(int pKeyCode, KeyEvent pKeyEvent) {
-
         if (pKeyCode >= 7 && pKeyCode <= 16) {
-            // TODO do something
-
+            iKeyCodeLogVar = pKeyCode;
             return true;
-        }
-
+        } else iKeyCodeLogVar = -1;
         return false;
     }
-
-
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//        Log.d("START", System.currentTimeMillis() + "");
-//    }
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        Log.d("RESUME", System.currentTimeMillis() + "");
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        Log.d("PAUSE", System.currentTimeMillis() + "");
-//    }
-//
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        Log.d("STOP", System.currentTimeMillis() + "");
-//    }
 
     /**
      * Detects when sensor values change and reacts
      * NOTE: currently it reacts to every single change
      * TODO: only collect data when user taps number on keyboard
      *
-     * @param event
+     * @param pEvent
      */
     @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (oSensorReader != null) {
-            if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
-            oSensorReader.printSensorEventInformation(event);
-        }
+    public void onSensorChanged(SensorEvent pEvent) {
+        if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
+
+        oSensorReader.addSensorDataLog(pEvent, iOrientationLogVar, iKeyCodeLogVar).print();
+        iKeyCodeLogVar = -1;
     }
 
     /**
      * TODO: determine sensors accuracy and frequency and make sure it stays constant
      *
-     * @param sensor
-     * @param accuracy
+     * @param pSensor
+     * @param pAccuracy
      */
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    public void onAccuracyChanged(Sensor pSensor, int pAccuracy) {
 
     }
 
@@ -115,11 +91,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onOrientationChanged(int pOrientation) {
                 // TODO refine values
                 if ((pOrientation < 65 || pOrientation > 115) && pOrientation != -1) {
-                    Log.e("MOVE PHONE", "Phone not in right orientation mode");
-                    // TODO prevent the user from putting in wrong values
+                    if (IS_IN_DEBUG_MODE) {
+                        Log.e("MOVE PHONE", "Phone not in right orientation mode");
+                    }
+                    iOrientationLogVar = pOrientation;
                 } else {
-                    Log.d("orientation changed", pOrientation + "");
-                    // actually do nothing
+                    if (IS_IN_DEBUG_MODE) {
+                        Log.d("orientation changed", pOrientation + "");
+                    }
+                    iOrientationLogVar = -1;
                 }
             }
         };
@@ -141,6 +121,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /**
      * only in for testing (so-far)
+     *
+     * @deprecated
      */
     private void testPersistence() {
         oStorageManager = StorageManager.getInstance();
