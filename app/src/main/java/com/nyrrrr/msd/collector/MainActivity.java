@@ -24,29 +24,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private OrientationEventListener oOrientationEventListener;
 
-    private int iKeyCodeLogVar = -1;
-    private int iOrientationLogVar = -1;
+    private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
+    private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
 
     /*
      * standard methods
      * ---------------------------------------------------------------------------------------------
      */
 
+    /**
+     * First method to run when app is started.
+     * @param savedInstanceState
+     */
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // init sensors
         setUpAccelerometerSensor();
-        //testPersistence();
         setUpOrientationSensor();
     }
 
+    /**
+     * Handles Key Up Event on soft keyboard
+     * @param pKeyCode
+     * @param pKeyEvent
+     * @return true when handled in function and false if upper layer should handle it.
+     */
     @Override
     public boolean onKeyUp(int pKeyCode, KeyEvent pKeyEvent) {
         if (pKeyCode >= 7 && pKeyCode <= 16) {
             iKeyCodeLogVar = pKeyCode;
             return true;
-        } else iKeyCodeLogVar = -1;
+        } else iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
         return false;
     }
 
@@ -61,8 +71,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent pEvent) {
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-        oSensorReader.addSensorDataLog(pEvent, iOrientationLogVar, iKeyCodeLogVar).print();
-        iKeyCodeLogVar = -1;
+        oSensorReader.addSensorDataLog(pEvent, iOrientationLogVar, KeyEvent.keyCodeToString(iKeyCodeLogVar)).print();
+        iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
     }
 
     /**
@@ -82,7 +92,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
 
     /**
-     * set up orientation sensor needed for ensuring that the orientation is kept
+     * Set-up of orientation sensor. Orientation data will be captured during runtime and
+     * combined with the accelerometer data. (Control variable)
      */
     private void setUpOrientationSensor() {
         oOrientationEventListener = new OrientationEventListener(
@@ -99,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     if (IS_IN_DEBUG_MODE) {
                         Log.d("orientation changed", pOrientation + "");
                     }
-                    iOrientationLogVar = -1;
+                    iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN;
                 }
             }
         };
@@ -109,7 +120,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     /**
-     * sets up the accelerometer for listening to sensor data
+     * Set-up of accelerometer sensor for data capturing.
+     * Registers EventListener.
      */
     private void setUpAccelerometerSensor() {
         oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -119,27 +131,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager.registerListener(this, oAcceleroMeter, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
-    /**
-     * only in for testing (so-far)
-     *
-     * @deprecated
-     */
-    private void testPersistence() {
-        oStorageManager = StorageManager.getInstance();
-        oStorageManager.storeData(getApplicationContext(), true);
-        oStorageManager.restoreData(getApplicationContext(), true);
-        try {
-            oStorageManager.setDataObject(new JSONObject("{test: { a:1, b:2}}"));
-            oStorageManager.storeData(getApplicationContext(), true);
-        } catch (JSONException e) {
-            Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
-        }
-    }
 
     /*
      * helper methods
      * ---------------------------------------------------------------------------------------------
      */
+
+    /**
+     * only in for testing (so-far)
+     *
+     * @deprecated
+     */
+//    private void testPersistence() {
+//        oStorageManager = StorageManager.getInstance();
+//        oStorageManager.storeData(getApplicationContext(), true);
+//        oStorageManager.restoreData(getApplicationContext(), true);
+//        try {
+//            oStorageManager.setDataObject(new JSONObject("{test: { a:1, b:2}}"));
+//            oStorageManager.storeData(getApplicationContext(), true);
+//        } catch (JSONException e) {
+//            Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
+//        }
+//    }
+
 //    TODO does not work for some reason, fix later
 //    private void initializeUI() {
 //        oEditText = (EditText) findViewById (R.id.codeSequenceNumberInput);

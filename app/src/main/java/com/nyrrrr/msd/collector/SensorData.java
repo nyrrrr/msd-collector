@@ -3,7 +3,6 @@ package com.nyrrrr.msd.collector;
 import android.hardware.SensorEvent;
 import android.os.Build;
 import android.util.Log;
-import android.view.KeyEvent;
 
 /**
  * Sensor Data object used to be saved later on
@@ -26,7 +25,7 @@ public class SensorData {
      * @param pOrientation
      * @param pKeyPressedCode
      */
-    public SensorData(SensorEvent pEvent, int pOrientation, int pKeyPressedCode) {
+    public SensorData(SensorEvent pEvent, int pOrientation, String pKeyPressedCode) {
         this(pEvent, pOrientation, pKeyPressedCode, -1);
     }
 
@@ -36,7 +35,7 @@ public class SensorData {
      * @param pKeyPressedCode
      * @param pFrequency
      */
-    public SensorData(SensorEvent pEvent, int pOrientation, int pKeyPressedCode, int pFrequency) {
+    public SensorData(SensorEvent pEvent, int pOrientation, String pKeyPressedCode, int pFrequency) {
         dTimestamp = pEvent.timestamp;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
             sSensorType = pEvent.sensor.getStringType();
@@ -45,7 +44,7 @@ public class SensorData {
         iAccuracy = pEvent.accuracy;
         fFrequency = pFrequency;
         iOrientation = pOrientation;
-        sKeyPressed = KeyEvent.keyCodeToString(pKeyPressedCode);
+        sKeyPressed = pKeyPressedCode;
         ;
     }
 

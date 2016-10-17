@@ -39,9 +39,11 @@ public class SensorReader {
      * @param pKeyCode key pressed (if any)
      * @return SensorData object
      */
-    public SensorData addSensorDataLog(SensorEvent pEvent, int pOrientation, int pKeyCode) {
+    public SensorData addSensorDataLog(SensorEvent pEvent, int pOrientation, String pKeyCode) {
         oSensorData = new SensorData(pEvent, pOrientation, pKeyCode);
-        if (oSensorDataList.add(oSensorData)) return oSensorData;
+        if (oSensorDataList.add(oSensorData)) {
+            return oSensorData;
+        }
         return null;
     }
 
@@ -67,7 +69,7 @@ public class SensorReader {
      * @deprecated
      */
     public void printSensorEventInformation(SensorEvent pEvent) {
-        oSensorData = new SensorData(pEvent, -1, -1, -1); // DEPRECATED
+        oSensorData = new SensorData(pEvent, -1, -1+"", -1); // DEPRECATED
         oSensorData.print();
     }
 
