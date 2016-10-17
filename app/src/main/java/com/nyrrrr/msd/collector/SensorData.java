@@ -44,8 +44,7 @@ public class SensorData {
         iAccuracy = pEvent.accuracy;
         fFrequency = pFrequency;
         iOrientation = pOrientation;
-        sKeyPressed = pKeyPressedCode;
-        ;
+        sKeyPressed = (pKeyPressedCode == "KEYCODE_UNKNOWN" ? "" : pKeyPressedCode);
     }
 
     public void print() {
