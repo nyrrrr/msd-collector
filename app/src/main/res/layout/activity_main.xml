@@ -10,31 +10,6 @@
     tools:context="com.nyrrrr.msd.collector.MainActivity">
 
 
-    <TextView
-        android:id="@+id/instructionText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:text="Please enter the following sequence:"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
-        android:id="@+id/codeSequenceText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/instructionText"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignRight="@+id/instructionText"
-        android:layout_below="@+id/instructionText"
-        android:text="1234567890"
-        android:textAlignment="center"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
     <EditText
         android:id="@+id/codeSequenceNumberInput"
         android:layout_width="wrap_content"
@@ -43,13 +18,12 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentStart="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="93dp"
+        android:layout_alignParentTop="true"
+        android:digits="1234567890"
         android:ems="12"
+        android:inputType="numberPassword"
         android:text="1234567890"
         android:textAlignment="center"
-        android:visibility="visible"
-        android:digits="1234567890"
-        android:inputType="numberPassword"></EditText>
+        android:visibility="visible"></EditText>
 
 </RelativeLayout>
