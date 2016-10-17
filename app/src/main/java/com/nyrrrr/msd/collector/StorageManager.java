@@ -1,6 +1,7 @@
 package com.nyrrrr.msd.collector;
 
 import android.content.Context;
+import android.hardware.SensorEvent;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -11,6 +12,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Saves data on phone
@@ -21,8 +24,7 @@ import java.io.IOException;
 
 public class StorageManager {
 
-    private static StorageManager oInstance = null;
-    private final String STRING_FILE_NAME = "msd-data.json";
+    private final String STRING_FILE_NAME = "msd-data.json"; // TODO use timestamp name?
     public JSONObject oData;
 
     /*
@@ -30,18 +32,46 @@ public class StorageManager {
      */
     private int iSize;
     private byte[] bBuffer;
+    private SensorData oSensorData;
+    private List<SensorData> oSensorDataList;
 
     /*
         singleton
      */
+    private static StorageManager oInstance = null;
     protected StorageManager() {
+        oSensorDataList = new ArrayList<SensorData>();
     }
-
     public static StorageManager getInstance() {
         if (oInstance == null) {
             oInstance = new StorageManager();
         }
         return oInstance;
+    }
+
+    /**
+     * puts captured data into a list for later storage (and removal of unneeded objects)
+     * @param pEvent sensor data event
+     * @param pOrientation orientation during capture
+     * @param pKeyCode key pressed (if any)
+     * @return SensorData object
+     */
+    public SensorData addSensorDataLog(SensorEvent pEvent, int pOrientation, String pKeyCode) {
+        oSensorData = new SensorData(pEvent, pOrientation, pKeyCode);
+        if (oSensorDataList.add(oSensorData)) {
+            return oSensorData;
+        }
+        return null;
+    }
+
+    public JSONObject storeSensorDataLog () {// TODO need path and name?
+        oData = convertSensorDataLogToJSON();
+        return null; // TODO store
+    }
+
+    private JSONObject convertSensorDataLogToJSON() {
+
+        return null; // TODO
     }
 
     /**
@@ -111,6 +141,10 @@ public class StorageManager {
         return oData;
     }
 
+    /**
+     * @deprecated
+     * @param oData
+     */
     public void setDataObject(JSONObject oData) {
         this.oData = oData;
     }
