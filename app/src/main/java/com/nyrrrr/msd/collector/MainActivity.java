@@ -10,11 +10,10 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.OrientationEventListener;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
+//    private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
+    private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_UI;
     private final boolean IS_IN_DEBUG_MODE = false;
 
     private SensorManager oSensorManager;
@@ -25,7 +24,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private OrientationEventListener oOrientationEventListener;
 
     private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
+    // only one key can be pressed at a time
     private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
+
 
     /*
      * standard methods
@@ -34,45 +35,60 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /**
      * First method to run when app is started.
+     *
      * @param savedInstanceState
      */
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // init sensors
+        // init sensors & persistence
+        setUpStorageManager();
         setUpAccelerometerSensor();
         setUpOrientationSensor();
     }
 
+
     /**
-     * Handles Key Up Event on soft keyboard
-     * @param pKeyCode
-     * @param pKeyEvent
-     * @return true when handled in function and false if upper layer should handle it.
+     * @// TODO: 17.10.2016 add doc
+     * @param pEvent
+     * @return
      */
     @Override
-    public boolean onKeyUp(int pKeyCode, KeyEvent pKeyEvent) {
-        if (pKeyCode >= 7 && pKeyCode <= 16) {
-            iKeyCodeLogVar = pKeyCode;
-            return true;
-        } else iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+    public boolean dispatchKeyEvent(KeyEvent pEvent) {
+        int pKeyCode = pEvent.getKeyCode();
+        if (pEvent.getAction()==KeyEvent.ACTION_DOWN) { // onKeyDown
+            if (pKeyCode >= 7 && pKeyCode <= 16) {
+                iKeyCodeLogVar = pKeyCode;
+            } else iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+            if (pKeyCode == KeyEvent.KEYCODE_ENTER) { // onKeyUp
+                // TODO convert and store data
+
+                return true;
+            }
+        }
+        else if (pEvent.getAction()==KeyEvent.ACTION_UP) {
+            iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // reset key
+        }
         return false;
     }
 
     /**
      * Detects when sensor values change and reacts
      * NOTE: currently it reacts to every single change
-     * TODO: only collect data when user taps number on keyboard
-     *
      * @param pEvent
      */
     @Override
     public void onSensorChanged(SensorEvent pEvent) {
+
+        // TODO only capture while keyboard is open?!
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-        oSensorReader.addSensorDataLog(pEvent, iOrientationLogVar, KeyEvent.keyCodeToString(iKeyCodeLogVar)).print();
-        iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+        oStorageManager.addSensorDataLog(
+                pEvent,
+                iOrientationLogVar,
+                KeyEvent.keyCodeToString(iKeyCodeLogVar)
+        ).print(); // TODO debug only ; remove
     }
 
     /**
@@ -90,6 +106,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * custom methods
      * ---------------------------------------------------------------------------------------------
      */
+
+    /**
+     * Set-up of accelerometer sensor for data capturing.
+     * Registers EventListener.
+     */
+    private void setUpAccelerometerSensor() {
+        oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
+
+        oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_ACCELEROMETER);
+        oSensorManager.registerListener(this, oAcceleroMeter, GLOBAL_SENSOR_SPEED);
+    }
 
     /**
      * Set-up of orientation sensor. Orientation data will be captured during runtime and
@@ -119,18 +147,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    /**
-     * Set-up of accelerometer sensor for data capturing.
-     * Registers EventListener.
-     */
-    private void setUpAccelerometerSensor() {
-        oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
-
-        oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_ACCELEROMETER);
-        oSensorManager.registerListener(this, oAcceleroMeter, SensorManager.SENSOR_DELAY_FASTEST);
+    private void setUpStorageManager() {
+        oStorageManager = StorageManager.getInstance();
     }
-
 
     /*
      * helper methods
