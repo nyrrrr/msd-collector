@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /**
      * Detects when sensor values change and reacts
      * NOTE: currently it reacts to every single change
+     *
      * @param pEvent
      */
     @Override
@@ -95,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 KeyEvent.keyCodeToString(iKeyCodeLogVar)
         ).print(); // TODO debug only ; remove
         iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
-     *
     }
 
     /**
