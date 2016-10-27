@@ -12,9 +12,8 @@ import android.view.OrientationEventListener;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-//    private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
+    //    private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_UI;
-    private final boolean IS_IN_DEBUG_MODE = false;
 
     private SensorManager oSensorManager;
     private Sensor oAcceleroMeter;
@@ -50,26 +49,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     /**
-     * @// TODO: 17.10.2016 add doc
      * @param pEvent
      * @return
+     * @// TODO: 17.10.2016 add doc
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent pEvent) {
         int pKeyCode = pEvent.getKeyCode();
-        if (pEvent.getAction()==KeyEvent.ACTION_DOWN) { // onKeyDown
+        if (pEvent.getAction() == KeyEvent.ACTION_DOWN) { // onKeyDown
+            if (BuildConfig.DEBUG) Log.d("dKEYDOWN", pKeyCode + "");
             if (pKeyCode >= 7 && pKeyCode <= 16) {
                 iKeyCodeLogVar = pKeyCode;
-            } else iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+            } else {
+                if (BuildConfig.DEBUG)
+                    Log.e("KEY NOT RELEVANT", pKeyCode + " reset to KEYCODE_UNKNOWN");
+                iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+            }
             if (pKeyCode == KeyEvent.KEYCODE_ENTER) { // onKeyUp
                 // TODO convert and store data
 
                 return true;
             }
         }
-        else if (pEvent.getAction()==KeyEvent.ACTION_UP) {
-            iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // reset key
-        }
+//        else if (pEvent.getAction() == KeyEvent.ACTION_UP) {
+//            iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // reset key;
+//            if (BuildConfig.DEBUG) Log.d("dKEYUP", pKeyCode + "");
+//        }
         return false;
     }
 
@@ -89,6 +94,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 iOrientationLogVar,
                 KeyEvent.keyCodeToString(iKeyCodeLogVar)
         ).print(); // TODO debug only ; remove
+        iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+     *
     }
 
     /**
@@ -130,14 +137,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onOrientationChanged(int pOrientation) {
                 // TODO refine values
                 if ((pOrientation < 65 || pOrientation > 115) && pOrientation != -1) {
-                    if (IS_IN_DEBUG_MODE) {
-                        Log.e("MOVE PHONE", "Phone not in right orientation mode");
-                    }
+//                    if (BuildConfig.DEBUG) {
+//                        Log.e("MOVE PHONE", "Phone not in right orientation mode");
+//                    }
                     iOrientationLogVar = pOrientation;
                 } else {
-                    if (IS_IN_DEBUG_MODE) {
-                        Log.d("orientation changed", pOrientation + "");
-                    }
                     iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN;
                 }
             }
