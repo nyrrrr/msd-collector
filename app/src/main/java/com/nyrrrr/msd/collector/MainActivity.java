@@ -9,11 +9,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.OrientationEventListener;
+import android.view.View;
+import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    //    private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
+    // TODO   private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_UI;
+
+    private Button uCaptureButton;
 
     private SensorManager oSensorManager;
     private Sensor oAcceleroMeter;
@@ -41,10 +45,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // init ui
+        setUpUserInterface();
+
         // init sensors & persistence
-        setUpStorageManager();
-        setUpAccelerometerSensor();
-        setUpOrientationSensor();
+//        setUpStorageManager();
+//        setUpAccelerometerSensor();
+//        setUpOrientationSensor();
+    }
+
+    /**
+     *
+     */
+    private void setUpUserInterface() {
+
+        uCaptureButton = (Button) findViewById(R.id.captureButton);
+        uCaptureButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Perform action on click
+                Log.d("TEXT", uCaptureButton.getText().toString());
+                if(uCaptureButton.getText().toString() == "Capture") {
+                    uCaptureButton.setText("Stop Recording");
+                } else {
+                    uCaptureButton.setText("Capture");
+                }
+            }
+        });
     }
 
 

@@ -9,7 +9,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.nyrrrr.msd.collector.MainActivity">
 
-
     <EditText
         android:id="@+id/codeSequenceNumberInput"
         android:layout_width="wrap_content"
@@ -28,11 +27,11 @@
         android:visibility="visible"></EditText>
 
     <Button
-        android:text="Button"
+        android:text="Capture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="11dp"
-        android:id="@+id/button"
+        android:id="@+id/captureButton"
         android:layout_below="@+id/codeSequenceNumberInput"
         android:layout_centerHorizontal="true" />
 
