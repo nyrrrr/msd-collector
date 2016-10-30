@@ -6,7 +6,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
@@ -18,13 +17,9 @@ import android.widget.Button;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    // TODO   private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
-    private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_UI;
+    private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
-    private Button uCaptureButton;
-    // in capture mode, the app collects data and logs it
-    private boolean bIsInCaptureMode = false;
 
     private SensorManager oSensorManager;
     private Sensor oAcceleroMeter;
@@ -33,10 +28,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private OrientationEventListener oOrientationEventListener;
 
-    private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
-    // only one key can be pressed at a time
-    private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
+    private Button uCaptureButton;
+    private Button uSaveButton;
 
+    private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
+    private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
+    private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
 
     /*
      * standard methods
@@ -61,26 +58,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setUpOrientationSensor();
     }
 
+
     /**
+     * Store relevant keys (0-9) in var for later usage
+     *
+     * @param pKeyCode
      * @param pEvent
      * @return
-     * @// TODO: 17.10.2016 add doc
      */
     @Override
     public boolean onKeyUp(int pKeyCode, KeyEvent pEvent) {
         if (pKeyCode >= 7 && pKeyCode <= 16) {
             iKeyCodeLogVar = pKeyCode;
         } else {
-            if (BuildConfig.DEBUG)
-                Log.e("KEY NOT RELEVANT", pKeyCode + " reset to KEYCODE_UNKNOWN");
+            // irrelevant key
             iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
         }
-        if (pKeyCode == KeyEvent.KEYCODE_ENTER) { // onKeyUp
-            // TODO convert and store data
-
+        if (pKeyCode == KeyEvent.KEYCODE_ENTER) {
+            // do nothing
             return true;
         }
-
         return false;
     }
 
@@ -126,27 +123,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * set up button element for capture mode
      */
     private void setUpUserInterface() {
-
         uCaptureButton = (Button) findViewById(R.id.captureButton);
         uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
         uCaptureButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Perform action on click
                 if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_CAPTURE_TEXT) {
-                    stopCaptureMode();
+                    startCaptureMode();
                 } else if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_STOP_TEXT) {
-                    enableCaptureMode();
+                    stopCaptureMode();
                 }
+            }
+        });
+
+        uSaveButton = (Button) findViewById(R.id.saveButton);
+        uSaveButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // TODO change color and block functionality until data is stored.
+                stopCaptureMode();
+                uCaptureButton.setEnabled(false);
             }
         });
     }
 
-    private void stopCaptureMode() {
+    private void startCaptureMode() {
         uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
         bIsInCaptureMode = true;
     }
 
-    private void enableCaptureMode() {
+    private void stopCaptureMode() {
         uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
         bIsInCaptureMode = false;
     }
