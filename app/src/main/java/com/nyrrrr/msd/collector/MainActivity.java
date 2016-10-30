@@ -18,6 +18,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_UI;
 
     private Button uCaptureButton;
+    private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
+    private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
 
     private SensorManager oSensorManager;
     private Sensor oAcceleroMeter;
@@ -60,14 +62,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void setUpUserInterface() {
 
         uCaptureButton = (Button) findViewById(R.id.captureButton);
+        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
         uCaptureButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Perform action on click
-                Log.d("TEXT", uCaptureButton.getText().toString());
-                if(uCaptureButton.getText().toString() == "Capture") {
-                    uCaptureButton.setText("Stop Recording");
-                } else {
-                    uCaptureButton.setText("Capture");
+                if(uCaptureButton.getText().toString() == CAPTURE_BUTTON_CAPTURE_TEXT) {
+                    uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
+                } else if(uCaptureButton.getText().toString() == CAPTURE_BUTTON_STOP_TEXT) {
+                    uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
                 }
             }
         });
