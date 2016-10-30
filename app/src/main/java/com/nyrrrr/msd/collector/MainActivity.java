@@ -1,5 +1,6 @@
 package com.nyrrrr.msd.collector;
 
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -142,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 // TODO change color and block functionality until data is stored.
                 stopCaptureMode();
                 uCaptureButton.setEnabled(false);
+                uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081"))); // TODO: original = #FF3F51B5
             }
         });
     }
