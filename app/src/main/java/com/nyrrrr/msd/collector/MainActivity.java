@@ -12,14 +12,19 @@ import android.view.OrientationEventListener;
 import android.view.View;
 import android.widget.Button;
 
+/**
+ * Main Class
+ * When Capture mode is enabled, sensor data are being logged.
+ */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     // TODO   private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_UI;
-
-    private Button uCaptureButton;
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
+    private Button uCaptureButton;
+    // in capture mode, the app collects data and logs it
+    private boolean bIsInCaptureMode = false;
 
     private SensorManager oSensorManager;
     private Sensor oAcceleroMeter;
@@ -51,30 +56,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setUpUserInterface();
 
         // init sensors & persistence
-//        setUpStorageManager();
-//        setUpAccelerometerSensor();
-//        setUpOrientationSensor();
+        setUpStorageManager();
+        setUpAccelerometerSensor();
+        setUpOrientationSensor();
     }
-
-    /**
-     *
-     */
-    private void setUpUserInterface() {
-
-        uCaptureButton = (Button) findViewById(R.id.captureButton);
-        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
-        uCaptureButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on click
-                if(uCaptureButton.getText().toString() == CAPTURE_BUTTON_CAPTURE_TEXT) {
-                    uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
-                } else if(uCaptureButton.getText().toString() == CAPTURE_BUTTON_STOP_TEXT) {
-                    uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
-                }
-            }
-        });
-    }
-
 
     /**
      * @param pEvent
@@ -82,27 +67,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * @// TODO: 17.10.2016 add doc
      */
     @Override
-    public boolean dispatchKeyEvent(KeyEvent pEvent) {
-        int pKeyCode = pEvent.getKeyCode();
-        if (pEvent.getAction() == KeyEvent.ACTION_DOWN) { // onKeyDown
-            if (BuildConfig.DEBUG) Log.d("dKEYDOWN", pKeyCode + "");
-            if (pKeyCode >= 7 && pKeyCode <= 16) {
-                iKeyCodeLogVar = pKeyCode;
-            } else {
-                if (BuildConfig.DEBUG)
-                    Log.e("KEY NOT RELEVANT", pKeyCode + " reset to KEYCODE_UNKNOWN");
-                iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
-            }
-            if (pKeyCode == KeyEvent.KEYCODE_ENTER) { // onKeyUp
-                // TODO convert and store data
-
-                return true;
-            }
+    public boolean onKeyUp(int pKeyCode, KeyEvent pEvent) {
+        if (pKeyCode >= 7 && pKeyCode <= 16) {
+            iKeyCodeLogVar = pKeyCode;
+        } else {
+            if (BuildConfig.DEBUG)
+                Log.e("KEY NOT RELEVANT", pKeyCode + " reset to KEYCODE_UNKNOWN");
+            iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
         }
-//        else if (pEvent.getAction() == KeyEvent.ACTION_UP) {
-//            iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // reset key;
-//            if (BuildConfig.DEBUG) Log.d("dKEYUP", pKeyCode + "");
-//        }
+        if (pKeyCode == KeyEvent.KEYCODE_ENTER) { // onKeyUp
+            // TODO convert and store data
+
+            return true;
+        }
+
         return false;
     }
 
@@ -115,15 +93,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent pEvent) {
 
-        // TODO only capture while keyboard is open?!
-        if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
+        if (bIsInCaptureMode) {
+            // TODO only capture while keyboard is open?!
+            if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-        oStorageManager.addSensorDataLogEntry(
-                pEvent,
-                iOrientationLogVar,
-                KeyEvent.keyCodeToString(iKeyCodeLogVar)
-        ).print(); // TODO debug only ; remove
-        iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+            oStorageManager.addSensorDataLogEntry(
+                    pEvent,
+                    iOrientationLogVar,
+                    KeyEvent.keyCodeToString(iKeyCodeLogVar)
+            ).print(); // TODO debug only ; remove
+            iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+        }
     }
 
     /**
@@ -141,6 +121,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * custom methods
      * ---------------------------------------------------------------------------------------------
      */
+
+    /**
+     * set up button element for capture mode
+     */
+    private void setUpUserInterface() {
+
+        uCaptureButton = (Button) findViewById(R.id.captureButton);
+        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
+        uCaptureButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Perform action on click
+                if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_CAPTURE_TEXT) {
+                    stopCaptureMode();
+                } else if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_STOP_TEXT) {
+                    enableCaptureMode();
+                }
+            }
+        });
+    }
+
+    private void stopCaptureMode() {
+        uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
+        bIsInCaptureMode = true;
+    }
+
+    private void enableCaptureMode() {
+        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
+        bIsInCaptureMode = false;
+    }
 
     /**
      * Set-up of accelerometer sensor for data capturing.
@@ -182,33 +191,4 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void setUpStorageManager() {
         oStorageManager = StorageManager.getInstance();
     }
-
-    /*
-     * helper methods
-     * ---------------------------------------------------------------------------------------------
-     */
-
-    /**
-     * only in for testing (so-far)
-     *
-     * @deprecated
-     */
-//    private void testPersistence() {
-//        oStorageManager = StorageManager.getInstance();
-//        oStorageManager.storeData(getApplicationContext(), true);
-//        oStorageManager.restoreData(getApplicationContext(), true);
-//        try {
-//            oStorageManager.setDataObject(new JSONObject("{test: { a:1, b:2}}"));
-//            oStorageManager.storeData(getApplicationContext(), true);
-//        } catch (JSONException e) {
-//            Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
-//        }
-//    }
-
-//    TODO does not work for some reason, fix later
-//    private void initializeUI() {
-//        oEditText = (EditText) findViewById (R.id.codeSequenceNumberInput);
-//        Log.d("password", oEditText.getText().toString());
-//        oEditText.setTransformationMethod(PasswordTransformationMethod.getInstance());
-//    }
 }

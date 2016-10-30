@@ -9,45 +9,39 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.nyrrrr.msd.collector.MainActivity">
 
+    <Button
+        android:text="Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button2"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:text="Capture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/captureButton"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
     <EditText
         android:id="@+id/codeSequenceNumberInput"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         android:digits="1234567890"
         android:ems="12"
         android:inputType="numberPassword"
         android:text="1234567890"
         android:textAlignment="center"
         android:imeOptions="flagNoExtractUi"
-        android:visibility="visible"></EditText>
-
-    <Button
-        android:text="Capture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:id="@+id/captureButton"
-        android:layout_marginLeft="48dp"
-        android:layout_marginStart="48dp"
-        android:layout_below="@+id/codeSequenceNumberInput"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <Button
-        android:text="Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/button2"
-        android:layout_alignBaseline="@+id/captureButton"
-        android:layout_alignBottom="@+id/captureButton"
+        android:visibility="visible"
+        android:layout_below="@+id/captureButton"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginRight="50dp"
-        android:layout_marginEnd="50dp" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"></EditText>
 
 </RelativeLayout>
