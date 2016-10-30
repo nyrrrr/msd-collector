@@ -24,9 +24,12 @@ import java.util.List;
 
 public class StorageManager {
 
+    /*
+        singleton
+     */
+    private static StorageManager oInstance = null;
     private final String STRING_FILE_NAME = "msd-data.json"; // TODO use timestamp name?
     public JSONObject oData;
-
     /*
         temporary vars
      */
@@ -35,13 +38,10 @@ public class StorageManager {
     private SensorData oSensorData;
     private List<SensorData> oSensorDataList;
 
-    /*
-        singleton
-     */
-    private static StorageManager oInstance = null;
     protected StorageManager() {
         oSensorDataList = new ArrayList<SensorData>();
     }
+
     public static StorageManager getInstance() {
         if (oInstance == null) {
             oInstance = new StorageManager();
@@ -51,12 +51,13 @@ public class StorageManager {
 
     /**
      * puts captured data into a list for later storage (and removal of unneeded objects)
-     * @param pEvent sensor data event
+     *
+     * @param pEvent       sensor data event
      * @param pOrientation orientation during capture
-     * @param pKeyCode key pressed (if any)
+     * @param pKeyCode     key pressed (if any)
      * @return SensorData object
      */
-    public SensorData addSensorDataLog(SensorEvent pEvent, int pOrientation, String pKeyCode) {
+    public SensorData addSensorDataLogEntry(SensorEvent pEvent, int pOrientation, String pKeyCode) {
         oSensorData = new SensorData(pEvent, pOrientation, pKeyCode);
         if (oSensorDataList.add(oSensorData)) {
             return oSensorData;
@@ -64,12 +65,13 @@ public class StorageManager {
         return null;
     }
 
-    public JSONObject storeSensorDataLog () {// TODO need path and name?
+    public JSONObject storeSensorDataLog() {// TODO need path and name?
         oData = convertSensorDataLogToJSON();
         return null; // TODO store
     }
 
     private JSONObject convertSensorDataLogToJSON() {
+
 
         return null; // TODO
     }
@@ -108,6 +110,7 @@ public class StorageManager {
 
     /**
      * Get data from JSON file
+     *
      * @param pAppContext
      * @return JSON data object
      */
@@ -142,8 +145,8 @@ public class StorageManager {
     }
 
     /**
-     * @deprecated
      * @param oData
+     * @deprecated
      */
     public void setDataObject(JSONObject oData) {
         this.oData = oData;

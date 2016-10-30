@@ -24,6 +24,16 @@
         android:inputType="numberPassword"
         android:text="1234567890"
         android:textAlignment="center"
+        android:imeOptions="flagNoExtractUi"
         android:visibility="visible"></EditText>
+
+    <Button
+        android:text="Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:id="@+id/button"
+        android:layout_below="@+id/codeSequenceNumberInput"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

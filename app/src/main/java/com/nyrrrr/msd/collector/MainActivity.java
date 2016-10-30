@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // TODO only capture while keyboard is open?!
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-        oStorageManager.addSensorDataLog(
+        oStorageManager.addSensorDataLogEntry(
                 pEvent,
                 iOrientationLogVar,
                 KeyEvent.keyCodeToString(iKeyCodeLogVar)
