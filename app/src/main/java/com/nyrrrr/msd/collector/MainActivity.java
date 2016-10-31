@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
@@ -19,6 +20,8 @@ import android.widget.Button;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
+    private static final boolean RUNS_IN_DEBUG_MODE = true;
+    private static final boolean RUNS_IN_DEPLOYMENT_MODE = false;
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
 
@@ -35,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
     private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
     private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
+    private int iCounter = 0;
 
     /*
      * standard methods
@@ -99,7 +103,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     pEvent,
                     iOrientationLogVar,
                     KeyEvent.keyCodeToString(iKeyCodeLogVar)
-            ).print(); // TODO debug only ; remove
+            ); // add .print() for debug
+            Log.d("Entry added", (++iCounter)+"");
             iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
         }
     }
@@ -144,6 +149,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 stopCaptureMode();
                 uCaptureButton.setEnabled(false);
                 uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081"))); // TODO: original = #FF3F51B5
+
+                oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE); //RUNS_IN_DEPLOYMENT_MODE
             }
         });
     }
@@ -181,9 +188,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onOrientationChanged(int pOrientation) {
                 // TODO refine values
                 if ((pOrientation < 65 || pOrientation > 115) && pOrientation != -1) {
-//                    if (BuildConfig.DEBUG) {
-//                        Log.e("MOVE PHONE", "Phone not in right orientation mode");
-//                    }
                     iOrientationLogVar = pOrientation;
                 } else {
                     iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN;

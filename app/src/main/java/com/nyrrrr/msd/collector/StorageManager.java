@@ -4,12 +4,8 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.JSONArray;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,17 +20,10 @@ import java.util.List;
 
 public class StorageManager {
 
-    /*
-        singleton
-     */
     private static StorageManager oInstance = null;
     private final String STRING_FILE_NAME = "msd-data.json"; // TODO use timestamp name?
-    public JSONObject oData;
-    /*
-        temporary vars
-     */
-    private int iSize;
-    private byte[] bBuffer;
+    public JSONArray oData;
+
     private SensorData oSensorData;
     private List<SensorData> oSensorDataList;
 
@@ -65,15 +54,20 @@ public class StorageManager {
         return null;
     }
 
-    public JSONObject storeSensorDataLog() {// TODO need path and name?
-        oData = convertSensorDataLogToJSON();
-        return null; // TODO store
-    }
+    /**
+     * Convert List object to JSONArray for storage
+     *
+     * @return JSONArray
+     */
+    private JSONArray convertSensorDataLogToJSON() {
+        List<SensorData> tDataList = oSensorDataList; // temp copy
 
-    private JSONObject convertSensorDataLogToJSON() {
+        // TODO remove unnecessary entries first
 
+        oData = new JSONArray(tDataList);
 
-        return null; // TODO
+        oSensorDataList = new ArrayList<SensorData>(); // reset
+        return oData;
     }
 
     /**
@@ -82,10 +76,9 @@ public class StorageManager {
      * @param pAppContext
      * @return JSON data object
      */
-    public JSONObject storeData(Context pAppContext) {
-        if (oData == null) {
-            oData = new JSONObject();
-        }
+    public JSONArray storeData(Context pAppContext) {
+        oData = convertSensorDataLogToJSON();
+
         try {
             FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + STRING_FILE_NAME);
             file.write(oData.toString());
@@ -98,57 +91,9 @@ public class StorageManager {
     }
 
     // debug-only
-    public JSONObject storeData(Context pAppContext, boolean pDebug) {
+    public JSONArray storeData(Context pAppContext, boolean pDebug) {
         oData = this.storeData(pAppContext);
-        try {
-            Log.d("JSON Write debug", oData.toString(4));
-        } catch (JSONException e) {
-            Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
-        }
+        Log.d("JSON Write debug", oData.toString());
         return oData;
-    }
-
-    /**
-     * Get data from JSON file
-     *
-     * @param pAppContext
-     * @return JSON data object
-     */
-    public JSONObject restoreData(Context pAppContext) {
-        try {
-            File file = new File(pAppContext.getFilesDir().getPath() + "/" + STRING_FILE_NAME);
-            FileInputStream fileInputStream = new FileInputStream(file);
-            iSize = fileInputStream.available();
-            bBuffer = new byte[iSize];
-            fileInputStream.read(bBuffer);
-            fileInputStream.close();
-            return oData = new JSONObject((new String(bBuffer)));                       // return
-        } catch (FileNotFoundException e) {
-            Log.e(e.getCause().toString(), "Error while reading: " + e.getMessage());
-        } catch (IOException e) {
-            Log.e(e.getCause().toString(), "Error while reading: " + e.getMessage());
-        } catch (JSONException e) {
-            Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
-        }
-        return null;
-    }
-
-    // debug-only
-    public JSONObject restoreData(Context pAppContext, boolean pDebug) {
-        oData = this.restoreData(pAppContext);
-        try {
-            Log.d("JSON Read debug", oData.toString(4));
-        } catch (JSONException e) {
-            Log.e(e.getCause().toString(), "Error while creating JSON: " + e.getMessage());
-        }
-        return oData;
-    }
-
-    /**
-     * @param oData
-     * @deprecated
-     */
-    public void setDataObject(JSONObject oData) {
-        this.oData = oData;
     }
 }
