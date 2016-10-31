@@ -5,6 +5,7 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -60,13 +61,12 @@ public class StorageManager {
      * @return JSONArray
      */
     private JSONArray convertSensorDataLogToJSON() {
-        List<SensorData> tDataList = oSensorDataList; // temp copy
-
         // TODO remove unnecessary entries first
+        oData = new JSONArray();
 
-        oData = new JSONArray(tDataList);
-
-        oSensorDataList = new ArrayList<SensorData>(); // reset
+        for( SensorData dataObject : oSensorDataList) {
+            oData.put(dataObject.toJSONObject());
+        }
         return oData;
     }
 
@@ -78,9 +78,15 @@ public class StorageManager {
      */
     public JSONArray storeData(Context pAppContext) {
         oData = convertSensorDataLogToJSON();
-
+        oSensorDataList = new ArrayList<SensorData>(); // reset
+        String fileName = "";
         try {
-            FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + STRING_FILE_NAME);
+            fileName = oData.getJSONObject(0).get("Timestamp") + "-";
+        } catch (JSONException e) {
+            Log.e(e.getCause().toString(), "Error while creating file name: " + e.getMessage());
+        }
+        try {
+            FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName  + STRING_FILE_NAME);
             file.write(oData.toString());
             file.flush();
             file.close();
