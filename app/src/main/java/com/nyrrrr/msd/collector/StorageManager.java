@@ -64,7 +64,7 @@ public class StorageManager {
         // TODO remove unnecessary entries first
         oData = new JSONArray();
 
-        for( SensorData dataObject : oSensorDataList) {
+        for (SensorData dataObject : oSensorDataList) {
             oData.put(dataObject.toJSONObject());
         }
         return oData;
@@ -76,30 +76,34 @@ public class StorageManager {
      * @param pAppContext
      * @return JSON data object
      */
-    public JSONArray storeData(Context pAppContext) {
+    public boolean storeData(Context pAppContext) {
         oData = convertSensorDataLogToJSON();
         oSensorDataList = new ArrayList<SensorData>(); // reset
         String fileName = "";
         try {
             fileName = oData.getJSONObject(0).get("Timestamp") + "-";
-        } catch (JSONException e) {
-            Log.e(e.getCause().toString(), "Error while creating file name: " + e.getMessage());
-        }
-        try {
-            FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName  + STRING_FILE_NAME);
+            FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_FILE_NAME);
             file.write(oData.toString());
             file.flush();
             file.close();
         } catch (IOException e) {
             Log.e(e.getCause().toString(), "Error while writing: " + e.getMessage());
+            return false;
+        } catch (JSONException e) {
+            Log.e(e.getCause().toString(), "Error while creating file name: " + e.getMessage());
+            return false;
         }
-        return oData;
+        return true;
     }
 
     // debug-only
-    public JSONArray storeData(Context pAppContext, boolean pDebug) {
-        oData = this.storeData(pAppContext);
+    public boolean storeData(Context pAppContext, boolean pDebug) {
+        boolean tSuccess = this.storeData(pAppContext);
         Log.d("JSON Write debug", oData.toString());
-        return oData;
+        return tSuccess;
+    }
+
+    public int getSensorDataLogLength () {
+        return oSensorDataList.size();
     }
 }

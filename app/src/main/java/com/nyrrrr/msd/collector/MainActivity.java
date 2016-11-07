@@ -12,6 +12,7 @@ import android.view.KeyEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 /**
  * Main Class
@@ -22,6 +23,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
     private static final boolean RUNS_IN_DEBUG_MODE = true;
     private static final boolean RUNS_IN_DEPLOYMENT_MODE = false;
+    private static final String NO_DATA_CAPTURED_MESSAGE = "No data was captured yet!";
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
 
@@ -39,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
     private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
     private int iCounter = 0;
+    private Toast uToast;
 
     /*
      * standard methods
@@ -104,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     iOrientationLogVar,
                     KeyEvent.keyCodeToString(iKeyCodeLogVar)
             ); // add .print() for debug
-            Log.d("Entry added", (++iCounter)+"");
+            Log.d("Entry added", (++iCounter) + "");
             iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
         }
     }
@@ -146,11 +149,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         uSaveButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // TODO change color and block functionality until data is stored.
-                stopCaptureMode();
-                uCaptureButton.setEnabled(false);
-                uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081"))); // TODO: original = #FF3F51B5
+                if (oStorageManager.getSensorDataLogLength() > 0) {
+                    stopCaptureMode();
+                    uCaptureButton.setEnabled(false);
+                    uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081"))); // TODO: original = #FF3F51B5
 
-                oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE); //RUNS_IN_DEPLOYMENT_MODE
+                    oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE);
+                } else {
+                    uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
+                    uToast.show();
+                }
             }
         });
     }

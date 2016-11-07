@@ -3,7 +3,6 @@ package com.nyrrrr.msd.collector;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
