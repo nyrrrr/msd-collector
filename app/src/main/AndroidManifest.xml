@@ -13,7 +13,7 @@
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="landscape"
-            android:windowSoftInputMode="stateVisible">
+            android:windowSoftInputMode="stateAlwaysVisible">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -42,6 +42,7 @@
         android:ems="12"
         android:imeOptions="flagNoExtractUi"
         android:inputType="numberPassword"
+        android:maxLines="1"
         android:textAlignment="center"
         android:visibility="visible"></EditText>
 
