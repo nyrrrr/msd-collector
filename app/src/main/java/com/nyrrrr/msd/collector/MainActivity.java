@@ -26,10 +26,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
     private static final boolean RUNS_IN_DEBUG_MODE = true;
-    private static final boolean RUNS_IN_DEPLOYMENT_MODE = false;
     private static final String NO_DATA_CAPTURED_MESSAGE = "No data was captured yet!";
     private static final String DATA_SUCCESSFULLY_STORED_MESSAGE = "The captured data has been stored.";
     private static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error: ";
+    private static final String NEGATIVE_COLOR_CODE = "#FFFF4081";
+    private static final String POSITIVE_COLOR_CODE = "#FF3F51B5";
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
 
@@ -149,10 +150,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void initSaveButton() {
         uSaveButton = (Button) findViewById(R.id.saveButton);
-        uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081")));
+        uSaveButton.setBackgroundColor(Color.parseColor((NEGATIVE_COLOR_CODE))); // red
         uSaveButton.setOnClickListener(new View.OnClickListener() { // onClick
             public void onClick(View v) {
-                // TODO change color and block functionality until data is stored.
                 if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
                     triggerStorageOfLoggedData();
                 } else { // if list is empty, show warning instead
@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void triggerStorageOfLoggedData() {
         stopCaptureMode();
-        uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081"))); // TODO: original = #FF3F51B5
+        uSaveButton.setBackgroundColor(Color.parseColor(NEGATIVE_COLOR_CODE)); // red
 
         try {
             oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE); // store data
@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     // enables data capturing flag
     private void startCaptureMode() {
         uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
-        uSaveButton.setBackgroundColor(Color.parseColor(("#FF3F51B5")));
+        uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // blue
         bIsInCaptureMode = true;
     }
 
