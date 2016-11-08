@@ -7,7 +7,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
@@ -40,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
     private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
     private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
-    private int iCounter = 0;
     private Toast uToast;
 
     /*
@@ -78,9 +76,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public boolean onKeyUp(int pKeyCode, KeyEvent pEvent) {
         if (pKeyCode >= 7 && pKeyCode <= 16) {
             iKeyCodeLogVar = pKeyCode;
-        } else {
-            // irrelevant key
-            iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
         }
         if (pKeyCode == KeyEvent.KEYCODE_ENTER) {
             // do nothing
@@ -98,16 +93,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent pEvent) {
 
+        // TODO make sure orientation is right, if not do not capture and show toast
         if (bIsInCaptureMode) {
-            // TODO only capture while keyboard is open?!
             if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
-
             oStorageManager.addSensorDataLogEntry(
                     pEvent,
                     iOrientationLogVar,
                     KeyEvent.keyCodeToString(iKeyCodeLogVar)
-            ); // add .print() for debug
-            Log.d("Entry added", (++iCounter) + "");
+            ).print(); // add .print() for debug
             iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
         }
     }
@@ -129,9 +122,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
 
     /**
-     * set up button element for capture mode
+     * Creates CAPTURE and SAVE button on UI and adds ClickListeners.
+     * Capture button will start capturing sensor data.
+     * Save button will stop capturing and store the results.
      */
     private void setUpUserInterface() {
+        // CAPTURE button
         uCaptureButton = (Button) findViewById(R.id.captureButton);
         uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
         uCaptureButton.setOnClickListener(new View.OnClickListener() {
@@ -145,17 +141,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
+        // SAVE button
         uSaveButton = (Button) findViewById(R.id.saveButton);
-        uSaveButton.setOnClickListener(new View.OnClickListener() {
+        uSaveButton.setOnClickListener(new View.OnClickListener() { // onClick
             public void onClick(View v) {
                 // TODO change color and block functionality until data is stored.
-                if (oStorageManager.getSensorDataLogLength() > 0) {
+                if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
                     stopCaptureMode();
-                    uCaptureButton.setEnabled(false);
+                    uCaptureButton.setEnabled(false); // disable capture button
                     uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081"))); // TODO: original = #FF3F51B5
 
-                    oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE);
-                } else {
+                    oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE); // store
+                } else { // if list is empty, show warning instead
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
                     uToast.show();
                 }
@@ -163,11 +160,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
     }
 
+    // enables data capturing flag
     private void startCaptureMode() {
         uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
         bIsInCaptureMode = true;
     }
 
+    // unset flag for data capture
     private void stopCaptureMode() {
         uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
         bIsInCaptureMode = false;
@@ -194,12 +193,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 getApplicationContext(), SensorManager.SENSOR_DELAY_FASTEST) {
             @Override
             public void onOrientationChanged(int pOrientation) {
-                // TODO refine values
-                if ((pOrientation < 65 || pOrientation > 115) && pOrientation != -1) {
-                    iOrientationLogVar = pOrientation;
-                } else {
-                    iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN;
-                }
+                iOrientationLogVar = pOrientation;
             }
         };
         if (oOrientationEventListener.canDetectOrientation()) {

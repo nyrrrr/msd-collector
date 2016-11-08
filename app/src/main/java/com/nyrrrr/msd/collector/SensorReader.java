@@ -6,7 +6,7 @@ import android.hardware.SensorManager;
 import java.util.List;
 
 /**
- * provide sensor info
+ * Class for reading Sensor data
  * Created by nyrrrr on 23.09.2016.
  */
 
@@ -30,7 +30,7 @@ public class SensorReader {
 
 
     /**
-     * get all sensors of a certain type
+     * Get all available sensors of a certain type
      *
      * @param pSensorType TYPE_ALL for all sensors
      * @return List<Sensor>

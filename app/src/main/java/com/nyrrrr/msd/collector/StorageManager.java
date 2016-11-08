@@ -40,12 +40,13 @@ public class StorageManager {
     }
 
     /**
-     * puts captured data into a list for later storage (and removal of unneeded objects)
+     * puts captured data into a list for later storage
      *
      * @param pEvent       sensor data event
      * @param pOrientation orientation during capture
      * @param pKeyCode     key pressed (if any)
      * @return SensorData object
+     * @// TODO: 08.11.2016 remove unnecessary data from list before storage?!
      */
     public SensorData addSensorDataLogEntry(SensorEvent pEvent, int pOrientation, String pKeyCode) {
         oSensorData = new SensorData(pEvent, pOrientation, pKeyCode);
@@ -71,14 +72,17 @@ public class StorageManager {
     }
 
     /**
-     * Create and save data file (msd-data.json)
+     * Create and save data file (TIMESTAMP-msd-data.json).
+     * The list of data will first be converted to JSON.
      *
      * @param pAppContext
-     * @return JSON data object
+     * @return boolean  - true for successful save
+     * @throws IOException
+     * @throws JSONException
      */
     public boolean storeData(Context pAppContext) {
         oData = convertSensorDataLogToJSON();
-        oSensorDataList = new ArrayList<SensorData>(); // reset
+        oSensorDataList = new ArrayList<SensorData>(); // reset list
         String fileName = "";
         try {
             fileName = oData.getJSONObject(0).get("Timestamp") + "-";
@@ -103,7 +107,12 @@ public class StorageManager {
         return tSuccess;
     }
 
-    public int getSensorDataLogLength () {
+    /**
+     * return size of list of logged data
+     *
+     * @return int
+     */
+    public int getSensorDataLogLength() {
         return oSensorDataList.size();
     }
 }
