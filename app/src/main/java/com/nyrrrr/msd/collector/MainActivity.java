@@ -11,6 +11,7 @@ import android.view.KeyEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
     private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
     private Toast uToast;
+    private EditText uEditText;
 
     /*
      * standard methods
@@ -62,12 +64,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         // init ui
-        setUpUserInterface();
+        initUI();
 
         // init sensors & persistence
-        setUpStorageManager();
-        setUpAccelerometerSensor();
-        setUpOrientationSensor();
+        initStorageManager();
+        initAccelerometerSensor();
+        initOrientationSensor();
     }
 
 
@@ -80,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     @Override
     public boolean onKeyUp(int pKeyCode, KeyEvent pEvent) {
-        if (pKeyCode >= 7 && pKeyCode <= 16) {
+        if (pKeyCode >= 7 && pKeyCode <= 16) { // keys 0 to 9
             iKeyCodeLogVar = pKeyCode;
         }
         if (pKeyCode == KeyEvent.KEYCODE_ENTER) {
@@ -132,22 +134,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Capture button will start capturing sensor data.
      * Save button will stop capturing and store the results.
      */
-    private void setUpUserInterface() {
-        // CAPTURE button
-        uCaptureButton = (Button) findViewById(R.id.captureButton);
-        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
-        uCaptureButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on click
-                if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_CAPTURE_TEXT) {
-                    startCaptureMode();
-                } else if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_STOP_TEXT) {
-                    stopCaptureMode();
-                }
-            }
-        });
+    private void initUI() {
 
+        initEditTextField();
+        // CAPTURE button
+        initCaptureButton();
         // SAVE button
+        initSaveButton();
+    }
+
+    /**
+     * Register onClick listener on save button.
+     * Save button stops data capturing process and stores data
+     */
+    private void initSaveButton() {
         uSaveButton = (Button) findViewById(R.id.saveButton);
         uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081")));
         uSaveButton.setOnClickListener(new View.OnClickListener() { // onClick
@@ -161,6 +161,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
             }
         });
+    }
+
+    /**
+     * Triggers capture mode in onClick method
+     */
+    private void initCaptureButton() {
+        uCaptureButton = (Button) findViewById(R.id.captureButton);
+        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
+        uCaptureButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Perform action on click
+                if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_CAPTURE_TEXT) {
+                    startCaptureMode();
+                } else if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_STOP_TEXT) {
+                    stopCaptureMode();
+                }
+            }
+        });
+    }
+
+    /**
+     * monkey fix to make the input visible despite being a password field
+     */
+    private void initEditTextField() {
+        uEditText = (EditText) findViewById(R.id.codeSequenceNumberInput);
+        uEditText.setTransformationMethod(null);
     }
 
     /**
@@ -201,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Set-up of accelerometer sensor for data capturing.
      * Registers EventListener.
      */
-    private void setUpAccelerometerSensor() {
+    private void initAccelerometerSensor() {
         oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
@@ -213,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Set-up of orientation sensor. Orientation data will be captured during runtime and
      * combined with the accelerometer data. (Control variable)
      */
-    private void setUpOrientationSensor() {
+    private void initOrientationSensor() {
         oOrientationEventListener = new OrientationEventListener(
                 getApplicationContext(), SensorManager.SENSOR_DELAY_FASTEST) {
             @Override
@@ -226,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    private void setUpStorageManager() {
+    private void initStorageManager() {
         oStorageManager = StorageManager.getInstance();
     }
 }

@@ -42,7 +42,6 @@
         android:ems="12"
         android:imeOptions="flagNoExtractUi"
         android:inputType="numberPassword"
-        android:text="1234567890"
         android:textAlignment="center"
         android:visibility="visible"></EditText>
 
