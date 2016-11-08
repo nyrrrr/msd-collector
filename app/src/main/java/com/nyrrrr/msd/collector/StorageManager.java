@@ -80,31 +80,22 @@ public class StorageManager {
      * @throws IOException
      * @throws JSONException
      */
-    public boolean storeData(Context pAppContext) {
+    public void storeData(Context pAppContext) throws JSONException, IOException {
         oData = convertSensorDataLogToJSON();
         oSensorDataList = new ArrayList<SensorData>(); // reset list
         String fileName = "";
-        try {
+
             fileName = oData.getJSONObject(0).get("Timestamp") + "-";
             FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_FILE_NAME);
             file.write(oData.toString());
             file.flush();
             file.close();
-        } catch (IOException e) {
-            Log.e(e.getCause().toString(), "Error while writing: " + e.getMessage());
-            return false;
-        } catch (JSONException e) {
-            Log.e(e.getCause().toString(), "Error while creating file name: " + e.getMessage());
-            return false;
-        }
-        return true;
     }
 
     // debug-only
-    public boolean storeData(Context pAppContext, boolean pDebug) {
-        boolean tSuccess = this.storeData(pAppContext);
-        Log.d("JSON Write debug", oData.toString());
-        return tSuccess;
+    public void storeData(Context pAppContext, boolean pDebug) throws IOException, JSONException {
+        this.storeData(pAppContext);
+        Log.d("JSON Write debug", oData.toString(4));
     }
 
     /**

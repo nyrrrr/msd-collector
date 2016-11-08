@@ -13,6 +13,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONException;
+
+import java.io.IOException;
+
 /**
  * Main Class
  * When Capture mode is enabled, sensor data are being logged.
@@ -23,6 +27,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final boolean RUNS_IN_DEBUG_MODE = true;
     private static final boolean RUNS_IN_DEPLOYMENT_MODE = false;
     private static final String NO_DATA_CAPTURED_MESSAGE = "No data was captured yet!";
+    private static final String DATA_SUCCESSFULLY_STORED_MESSAGE = "The captured data has been stored.";
+    private static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error: ";
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
 
@@ -143,15 +149,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // SAVE button
         uSaveButton = (Button) findViewById(R.id.saveButton);
+        uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081")));
         uSaveButton.setOnClickListener(new View.OnClickListener() { // onClick
             public void onClick(View v) {
                 // TODO change color and block functionality until data is stored.
                 if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
-                    stopCaptureMode();
-                    uCaptureButton.setEnabled(false); // disable capture button
-                    uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081"))); // TODO: original = #FF3F51B5
-
-                    oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE); // store
+                    triggerStorageOfLoggedData();
                 } else { // if list is empty, show warning instead
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
                     uToast.show();
@@ -160,9 +163,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
     }
 
+    /**
+     * Reset Capture Mode and store logged sensor data
+     */
+    private void triggerStorageOfLoggedData() {
+        stopCaptureMode();
+        uSaveButton.setBackgroundColor(Color.parseColor(("#FFFF4081"))); // TODO: original = #FF3F51B5
+
+        try {
+            oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE); // store data
+            uToast = Toast.makeText(getApplicationContext(), DATA_SUCCESSFULLY_STORED_MESSAGE, Toast.LENGTH_SHORT);
+            uToast.show();
+        } catch (IOException e) {
+            uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + e.getMessage(), Toast.LENGTH_SHORT);
+            uToast.show();
+        } catch (JSONException e) {
+            uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + e.getMessage(), Toast.LENGTH_SHORT);
+            uToast.show();
+        }
+
+    }
+
     // enables data capturing flag
     private void startCaptureMode() {
         uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
+        uSaveButton.setBackgroundColor(Color.parseColor(("#FF3F51B5")));
         bIsInCaptureMode = true;
     }
 
