@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // init sensors & persistence
         initStorageManager();
         initAccelerometerSensor();
-        initOrientationSensor();
+        initOrientationSensor(); // TODO use gyroscope sensor instead?
     }
 
 
@@ -102,7 +102,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent pEvent) {
 
-        // TODO make sure orientation is right, if not do not capture and show toast
         if (bIsInCaptureMode) {
             if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
             oStorageManager.addSensorDataLogEntry(
