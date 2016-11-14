@@ -87,7 +87,7 @@ public class StorageManager {
 
             fileName = oData.getJSONObject(0).get("Timestamp") + "-";
             FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_FILE_NAME);
-            file.write(oData.toString());
+            file.write(oData.toString(4));
             file.flush();
             file.close();
     }
