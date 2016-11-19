@@ -22,7 +22,7 @@ public class SensorData {
     private int iAccuracy = -1;
     private float fFrequency = -1;
     private int iOrientation = -1;
-    private String sKeyPressed = "";
+    String sKeyPressed = "";
 
     /**
      * @param pEvent

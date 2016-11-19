@@ -57,16 +57,20 @@ public class StorageManager {
     }
 
     /**
-     * Convert List object to JSONArray for storage
+     * Converts List of SensorData Object to JSONArray object.
+     * Can also remove unnecessary entries form the list.
      *
+     * @param pTrimData remove SensorData objects with no key presses stored
      * @return JSONArray
      */
-    private JSONArray convertSensorDataLogToJSON() {
-        // TODO remove unnecessary entries first
+    private JSONArray convertSensorDataLogToJSON(boolean pTrimData) {
         oData = new JSONArray();
 
         for (SensorData dataObject : oSensorDataList) {
-            oData.put(dataObject.toJSONObject());
+            if (pTrimData) {
+                if (!dataObject.sKeyPressed.equals("")) oData.put(dataObject.toJSONObject());
+            } else
+                oData.put(dataObject.toJSONObject());
         }
         return oData;
     }
@@ -81,15 +85,15 @@ public class StorageManager {
      * @throws JSONException
      */
     public void storeData(Context pAppContext) throws JSONException, IOException {
-        oData = convertSensorDataLogToJSON();
+        oData = convertSensorDataLogToJSON(true); //TODO change
         oSensorDataList = new ArrayList<SensorData>(); // reset list
         String fileName = "";
 
-            fileName = oData.getJSONObject(0).get("Timestamp") + "-";
-            FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_FILE_NAME);
-            file.write(oData.toString(4));
-            file.flush();
-            file.close();
+        fileName = oData.getJSONObject(0).get("Timestamp") + "-";
+        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_FILE_NAME);
+        file.write(oData.toString(4));
+        file.flush();
+        file.close();
     }
 
     // debug-only

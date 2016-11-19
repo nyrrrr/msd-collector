@@ -211,6 +211,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     // enables data capturing flag
     private void startCaptureMode() {
+        uEditText.setText("");
         uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
         uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // blue
         bIsInCaptureMode = true;
