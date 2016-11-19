@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
@@ -17,6 +18,10 @@ import android.widget.Toast;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import static java.util.Arrays.asList;
 
 /**
  * Main Class
@@ -31,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error: ";
     private static final String NEGATIVE_COLOR_CODE = "#FFFF4081";
     private static final String POSITIVE_COLOR_CODE = "#FF3F51B5";
+    private static final int INTEGER_MAX_DATA_LOGGED = 30;
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
 
@@ -43,12 +49,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private Button uCaptureButton;
     private Button uSaveButton;
+    private EditText uEditText;
+    private Toast uToast;
 
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
     private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
     private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
-    private Toast uToast;
-    private EditText uEditText;
+    private ArrayList<Integer> aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0,0));
+    private int iTempVar = 0;
 
     /*
      * standard methods
@@ -71,26 +79,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         initStorageManager();
         initAccelerometerSensor();
         initOrientationSensor(); // TODO use gyroscope sensor instead?
-    }
-
-
-    /**
-     * Store relevant keys (0-9) in var for later usage
-     *
-     * @param pKeyCode
-     * @param pEvent
-     * @return
-     */
-    @Override
-    public boolean onKeyUp(int pKeyCode, KeyEvent pEvent) {
-        if (pKeyCode >= 7 && pKeyCode <= 16) { // keys 0 to 9
-            iKeyCodeLogVar = pKeyCode;
-        }
-        if (pKeyCode == KeyEvent.KEYCODE_ENTER) {
-            // do nothing
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -124,6 +112,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    /**
+     * Store relevant keys (0-9) in var for later usage
+     * Only store a certain amount per key
+     *
+     * @param pKeyCode
+     * @param pEvent
+     * @return
+     */
+    @Override
+    public boolean onKeyUp(int pKeyCode, KeyEvent pEvent) {
+        if (pKeyCode >= 7 && pKeyCode <= 16) { // if key between 0 to 9
+            iTempVar = aKeyCountLog.get(pKeyCode - 7);
+            if (iTempVar < INTEGER_MAX_DATA_LOGGED) { // if key count is below the limit
+                iKeyCodeLogVar = pKeyCode;
+
+                aKeyCountLog.set(pKeyCode - 7, ++iTempVar);
+            } else {
+                if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) { // sufficient amount of data captured
+                    stopCaptureMode();
+                    uToast = Toast.makeText(getApplicationContext(), "DONE", Toast.LENGTH_LONG); // TODO constant and reset arraylist on save
+                    uToast.show();
+                }
+            }
+        } else {
+            // do nothing
+            return true;
+        }
+        return false;
+    }
+
     /*
      * custom methods
      * ---------------------------------------------------------------------------------------------
@@ -155,7 +173,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
                     triggerStorageOfLoggedData();
                 } else { // if list is empty, show warning instead
+                    aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0,0)); // reset counter
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
+                    uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                     uToast.show();
                 }
             }
@@ -196,14 +216,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         uSaveButton.setBackgroundColor(Color.parseColor(NEGATIVE_COLOR_CODE)); // red
 
         try {
-            oStorageManager.storeData(getApplicationContext(), RUNS_IN_DEBUG_MODE); // store data
+            oStorageManager.storeData(getApplicationContext(), true); // store data
             uToast = Toast.makeText(getApplicationContext(), DATA_SUCCESSFULLY_STORED_MESSAGE, Toast.LENGTH_SHORT);
+            uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
             uToast.show();
         } catch (IOException e) {
             uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + e.getMessage(), Toast.LENGTH_SHORT);
+            uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
             uToast.show();
         } catch (JSONException e) {
             uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + e.getMessage(), Toast.LENGTH_SHORT);
+            uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
             uToast.show();
         }
 
