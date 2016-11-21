@@ -44,7 +44,9 @@ public class SensorData {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
             sSensorType = pEvent.sensor.getStringType();
         }
-        fValues = pEvent.values;
+        fValues[0] = pEvent.values[0];
+        fValues[1] = pEvent.values[1];
+        fValues[2] = pEvent.values[2];
         iAccuracy = pEvent.accuracy;
         fFrequency = pFrequency;
         iOrientation = pOrientation;
