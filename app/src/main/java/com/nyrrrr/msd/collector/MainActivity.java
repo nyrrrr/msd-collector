@@ -29,14 +29,15 @@ import static java.util.Arrays.asList;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
+    private static final int INTEGER_MAX_DATA_LOGGED = 30;
+
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
-    private static final boolean RUNS_IN_DEBUG_MODE = true;
     private static final String NO_DATA_CAPTURED_MESSAGE = "No data was captured yet!";
     private static final String DATA_SUCCESSFULLY_STORED_MESSAGE = "The captured data has been stored.";
     private static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error: ";
     private static final String NEGATIVE_COLOR_CODE = "#FFFF4081";
     private static final String POSITIVE_COLOR_CODE = "#FF3F51B5";
-    private static final int INTEGER_MAX_DATA_LOGGED = 30;
+
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
 
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
     private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
     private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
-    private ArrayList<Integer> aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0,0));
+    private ArrayList<Integer> aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
     private int iTempVar = 0;
 
     /*
@@ -123,16 +124,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public boolean onKeyUp(int pKeyCode, KeyEvent pEvent) {
         if (pKeyCode >= 7 && pKeyCode <= 16) { // if key between 0 to 9
-            iTempVar = aKeyCountLog.get(pKeyCode - 7);
-            if (iTempVar < INTEGER_MAX_DATA_LOGGED) { // if key count is below the limit
-                iKeyCodeLogVar = pKeyCode;
+            if (bIsInCaptureMode) {
+                iTempVar = aKeyCountLog.get(pKeyCode - 7);
+                if (iTempVar < INTEGER_MAX_DATA_LOGGED) { // if key count is below the limit
+                    iKeyCodeLogVar = pKeyCode;
 
-                aKeyCountLog.set(pKeyCode - 7, ++iTempVar);
-            } else {
-                if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) { // sufficient amount of data captured
-                    stopCaptureMode();
-                    uToast = Toast.makeText(getApplicationContext(), "DONE", Toast.LENGTH_LONG); // TODO constant and reset arraylist on save
-                    uToast.show();
+                    aKeyCountLog.set(pKeyCode - 7, ++iTempVar);
+                } else {
+                    if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) { // sufficient amount of data captured
+                        stopCaptureMode();
+                        uToast = Toast.makeText(getApplicationContext(), "DONE", Toast.LENGTH_SHORT); // TODO constant and reset arraylist on save
+                        uToast.show();
+                    }
                 }
             }
         } else {
@@ -173,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
                     triggerStorageOfLoggedData();
                 } else { // if list is empty, show warning instead
-                    aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0,0)); // reset counter
+                    aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); // reset counter
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
                     uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                     uToast.show();
