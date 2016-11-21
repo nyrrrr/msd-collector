@@ -29,12 +29,15 @@ import static java.util.Arrays.asList;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 30;
+    private static final int INTEGER_MAX_DATA_LOGGED = 2;
 
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
+
     private static final String NO_DATA_CAPTURED_MESSAGE = "No data was captured yet!";
     private static final String DATA_SUCCESSFULLY_STORED_MESSAGE = "The captured data has been stored.";
     private static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error: ";
+    private static final String STRING_DONE_CAPTURING_MESSAGE = "You are done capturing.\nPlease press SAVE now.";
+
     private static final String NEGATIVE_COLOR_CODE = "#FFFF4081";
     private static final String POSITIVE_COLOR_CODE = "#FF3F51B5";
 
@@ -133,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 } else {
                     if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) { // sufficient amount of data captured
                         stopCaptureMode();
-                        uToast = Toast.makeText(getApplicationContext(), "DONE", Toast.LENGTH_SHORT); // TODO constant and reset arraylist on save
+                        uToast = Toast.makeText(getApplicationContext(), STRING_DONE_CAPTURING_MESSAGE, Toast.LENGTH_SHORT);
                         uToast.show();
                     }
                 }
@@ -176,11 +179,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
                     triggerStorageOfLoggedData();
                 } else { // if list is empty, show warning instead
-                    aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); // reset counter
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
                     uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                     uToast.show();
                 }
+                iTempVar = 0; // reset counter
+                aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); // reset counter
             }
         });
     }
