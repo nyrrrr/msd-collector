@@ -16,13 +16,13 @@ import org.json.JSONObject;
 
 public class SensorData {
 
+    String sKeyPressed = "";
     private long dTimestamp = -1;
     private String sSensorType = "";
     private float[] fValues = new float[3];
     private int iAccuracy = -1;
     private float fFrequency = -1;
     private int iOrientation = -1;
-    String sKeyPressed = "";
 
     /**
      * @param pEvent
@@ -75,6 +75,14 @@ public class SensorData {
             Log.e(e.getCause().toString(), "Error while converting list to JSON: " + e.getMessage());
         }
         return jsonObject;
+    }
+
+    public String toCSVString() {
+        return dTimestamp + "," + fValues[0] + "," + fValues[1] + "," + fValues[2] + "," + sKeyPressed + "," + iOrientation + "\n";
+    }
+
+    public String getCsvHeaders() {
+        return "Timestamp,x,y,z,Key,Orientation\n";
     }
 
     public void print() {

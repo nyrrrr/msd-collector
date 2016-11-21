@@ -21,8 +21,11 @@ import java.util.List;
 
 public class StorageManager {
 
+    private static final String STRING_JSON_FILE_NAME = "msd-data.json";
+    private static final String STRING_CSV_FILE_NAME = "msd-data.csv";
+    private static final boolean BOOLEAN_TRIM_DATA = true;
+
     private static StorageManager oInstance = null;
-    private final String STRING_FILE_NAME = "msd-data.json"; // TODO use timestamp name?
     public JSONArray oData;
 
     private SensorData oSensorData;
@@ -76,6 +79,25 @@ public class StorageManager {
     }
 
     /**
+     * Convert List of SensorData to CSV String.
+     * Can also remove unnecessary entries from the original list
+     *
+     * @param pTrimData remove SensorData objects with no key presses stored
+     * @return CSV String
+     */
+    private String convertSensorDataLogToCSV(boolean pTrimData) {
+        String csvString = oSensorDataList.get(0).getCsvHeaders();
+        for (SensorData dataObject : oSensorDataList) {
+            if (pTrimData) {
+                if (!dataObject.sKeyPressed.equals("")) csvString += dataObject.toCSVString();
+            } else
+                csvString += dataObject.toCSVString();
+        }
+        Log.d("CSV", csvString);
+        return csvString;
+    }
+
+    /**
      * Create and save data file (TIMESTAMP-msd-data.json).
      * The list of data will first be converted to JSON.
      *
@@ -85,15 +107,21 @@ public class StorageManager {
      * @throws JSONException
      */
     public void storeData(Context pAppContext) throws JSONException, IOException {
-        oData = convertSensorDataLogToJSON(true); //TODO change
-        oSensorDataList = new ArrayList<SensorData>(); // reset list
-        String fileName = "";
+        oData = convertSensorDataLogToJSON(BOOLEAN_TRIM_DATA); //TODO change
 
-        fileName = oData.getJSONObject(0).get("Timestamp") + "-";
-        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_FILE_NAME);
+        String fileName = oData.getJSONObject(0).get("Timestamp") + "-";
+        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_JSON_FILE_NAME);
         file.write(oData.toString(4));
         file.flush();
         file.close();
+
+        // write csv
+        file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_CSV_FILE_NAME);
+        file.write(convertSensorDataLogToCSV(BOOLEAN_TRIM_DATA));
+        file.flush();
+        file.close();
+
+        oSensorDataList = new ArrayList<SensorData>(); // reset list
     }
 
     // debug-only
