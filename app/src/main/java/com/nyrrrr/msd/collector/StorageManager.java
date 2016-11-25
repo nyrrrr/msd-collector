@@ -15,14 +15,14 @@ import java.util.List;
 /**
  * Saves data on phone
  * Currently saves the data in JSON. I might reconsider this format.
- * TODO SQLite might make more sense for this task.
+ *
  * Created by nyrrrr on 27.09.2016.
  */
 
 public class StorageManager {
 
-    private static final String STRING_JSON_FILE_NAME = "msd-data.json";
-    private static final String STRING_CSV_FILE_NAME = "msd-data.csv";
+    private static final String STRING_JSON_FILE_NAME = "training-data.json";
+    private static final String STRING_CSV_FILE_NAME = "training-data.csv";
     private static final boolean BOOLEAN_TRIM_DATA = true;
 
     private static StorageManager oInstance = null;
@@ -49,7 +49,6 @@ public class StorageManager {
      * @param pOrientation orientation during capture
      * @param pKeyCode     key pressed (if any)
      * @return SensorData object
-     * @// TODO: 08.11.2016 remove unnecessary data from list before storage?!
      */
     public SensorData addSensorDataLogEntry(SensorEvent pEvent, int pOrientation, String pKeyCode) {
         oSensorData = new SensorData(pEvent, pOrientation, pKeyCode);
@@ -107,7 +106,7 @@ public class StorageManager {
      * @throws JSONException
      */
     public void storeData(Context pAppContext) throws JSONException, IOException {
-        oData = convertSensorDataLogToJSON(BOOLEAN_TRIM_DATA); //TODO change
+        oData = convertSensorDataLogToJSON(BOOLEAN_TRIM_DATA);
 
         String fileName = oData.getJSONObject(0).get("Timestamp") + "-";
         FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_JSON_FILE_NAME);

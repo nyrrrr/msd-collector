@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // init sensors & persistence
         initStorageManager();
         initAccelerometerSensor();
-        initOrientationSensor(); // TODO use gyroscope sensor instead?
+        initOrientationSensor();
     }
 
     /**

@@ -24,7 +24,7 @@ public class SensorReader {
         this.oSensorManager = pSensorManager;
     }
 
-    Sensor getSingleSensorOfType(int pSensorType) {
+    public Sensor getSingleSensorOfType(int pSensorType) {
         return oSensorManager.getDefaultSensor(pSensorType);
     }
 
@@ -35,7 +35,7 @@ public class SensorReader {
      * @param pSensorType TYPE_ALL for all sensors
      * @return List<Sensor>
      */
-    private List<Sensor> getSensorsOfType(int pSensorType) {
+    public List<Sensor> getSensorsOfType(int pSensorType) {
         return oSensorManager.getSensorList(pSensorType);
     }
 }
