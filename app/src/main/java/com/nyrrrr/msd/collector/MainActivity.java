@@ -7,15 +7,13 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.OrientationEventListener;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
-import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,10 +44,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SensorManager oSensorManager;
     private Sensor oAcceleroMeter;
+    private Sensor oGyroscope;
     private SensorReader oSensorReader;
     private StorageManager oStorageManager;
-
-    private OrientationEventListener oOrientationEventListener;
+    private SensorData oData;
 
     private Button uCaptureButton;
     private Button uSaveButton;
@@ -57,10 +55,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Toast uToast;
 
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
-    private int iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN; // 0
-    private int iOrientationLogVar = OrientationEventListener.ORIENTATION_UNKNOWN; // -1
     private ArrayList<Integer> aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
     private int iTempVar = 0;
+    private int iKeyCodeLogVar = -1;
+
 
     /*
      * standard methods
@@ -89,19 +87,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Detects when sensor values change and reacts
      * NOTE: currently it reacts to every single change
      *
-     * @param pEvent
+     * @param pSensorEvent
      */
     @Override
-    public void onSensorChanged(SensorEvent pEvent) {
+    public void onSensorChanged(SensorEvent pSensorEvent) {
 
         if (bIsInCaptureMode) {
-            if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
-            oStorageManager.addSensorDataLogEntry(
-                    pEvent,
-                    iOrientationLogVar,
-                    KeyEvent.keyCodeToString(iKeyCodeLogVar)
-            ).print(); // add .print() for debug
-            iKeyCodeLogVar = KeyEvent.KEYCODE_UNKNOWN;
+
+            if (oData == null) oData = new SensorData(pSensorEvent.timestamp);
+            if (pSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+                oData.x = pSensorEvent.values[0];
+                oData.y = pSensorEvent.values[1];
+                oData.z = pSensorEvent.values[2];
+            } else if (pSensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                oData.alpha = pSensorEvent.values[0];
+                oData.beta = pSensorEvent.values[1];
+                oData.gamma = pSensorEvent.values[2];
+            }
+            if (iKeyCodeLogVar != -1) {
+                oData.keyPressed = KeyEvent.keyCodeToString(iKeyCodeLogVar);
+                iKeyCodeLogVar = -1;
+            }
+            if (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0) {
+
+
+                // TODO key pos x, y
+                oStorageManager.addSensorDataLogEntry(oData);
+                Log.d("Data", oData.toCSVString());
+                oData = null;
+            }
         }
     }
 
@@ -223,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         uSaveButton.setBackgroundColor(Color.parseColor(NEGATIVE_COLOR_CODE)); // red
 
         try {
-            oStorageManager.storeData(getApplicationContext(), true); // store data
+            oStorageManager.storeData(getApplicationContext()); // store data
             uToast = Toast.makeText(getApplicationContext(), DATA_SUCCESSFULLY_STORED_MESSAGE, Toast.LENGTH_SHORT);
             uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
             uToast.show();
@@ -231,10 +245,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + e.getMessage(), Toast.LENGTH_SHORT);
             uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
             uToast.show();
-        } catch (JSONException e) {
-            uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + e.getMessage(), Toast.LENGTH_SHORT);
-            uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-            uToast.show();
+            e.printStackTrace();
         }
 
     }
@@ -261,25 +272,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-        oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_ACCELEROMETER);
+        oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
         oSensorManager.registerListener(this, oAcceleroMeter, GLOBAL_SENSOR_SPEED);
     }
 
     /**
-     * Set-up of orientation sensor. Orientation data will be captured during runtime and
-     * combined with the accelerometer data. (Control variable)
+     * Set-up of Gyroscope sensor. Orientation data will be captured during runtime and
+     * combined with the accelerometer data.
      */
     private void initOrientationSensor() {
-        oOrientationEventListener = new OrientationEventListener(
-                getApplicationContext(), SensorManager.SENSOR_DELAY_FASTEST) {
-            @Override
-            public void onOrientationChanged(int pOrientation) {
-                iOrientationLogVar = pOrientation;
-            }
-        };
-        if (oOrientationEventListener.canDetectOrientation()) {
-            oOrientationEventListener.enable();
-        }
+        oGyroscope = oSensorReader.getSingleSensorOfType(Sensor.TYPE_GYROSCOPE);
+        oSensorManager.registerListener(this, oGyroscope, GLOBAL_SENSOR_SPEED);
     }
 
     private void initStorageManager() {

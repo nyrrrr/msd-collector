@@ -3,6 +3,7 @@ package com.nyrrrr.msd.collector;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,21 +22,13 @@ public class SensorReader {
      * @param pSensorManager
      */
     public SensorReader(SensorManager pSensorManager) {
+
         this.oSensorManager = pSensorManager;
+        oSensorList = new ArrayList<>();
     }
 
     public Sensor getSingleSensorOfType(int pSensorType) {
+        oSensorList.add(oSensorManager.getDefaultSensor(pSensorType));
         return oSensorManager.getDefaultSensor(pSensorType);
-    }
-
-
-    /**
-     * Get all available sensors of a certain type
-     *
-     * @param pSensorType TYPE_ALL for all sensors
-     * @return List<Sensor>
-     */
-    public List<Sensor> getSensorsOfType(int pSensorType) {
-        return oSensorManager.getSensorList(pSensorType);
     }
 }
