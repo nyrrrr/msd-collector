@@ -7,8 +7,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -27,7 +25,7 @@ import static java.util.Arrays.asList;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 2;
+    private static final int INTEGER_MAX_DATA_LOGGED = 30;
 
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
 
@@ -113,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 // TODO key pos x, y
                 oStorageManager.addSensorDataLogEntry(oData);
-                Log.d("Data", oData.toCSVString());
+//                Log.d("Data", oData.toCSVString());
                 oData = null;
             }
         }
@@ -127,7 +125,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     @Override
     public void onAccuracyChanged(Sensor pSensor, int pAccuracy) {
-
     }
 
     /**
@@ -145,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 iTempVar = aKeyCountLog.get(pKeyCode - 7);
                 if (iTempVar < INTEGER_MAX_DATA_LOGGED) { // if key count is below the limit
                     iKeyCodeLogVar = pKeyCode;
-
                     aKeyCountLog.set(pKeyCode - 7, ++iTempVar);
                 } else {
                     if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) { // sufficient amount of data captured
@@ -194,10 +190,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     triggerStorageOfLoggedData();
                 } else { // if list is empty, show warning instead
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
-                    uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                     uToast.show();
                 }
-                iTempVar = 0; // reset counter
                 aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); // reset counter
             }
         });
@@ -236,18 +230,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stopCaptureMode();
         uSaveButton.setBackgroundColor(Color.parseColor(NEGATIVE_COLOR_CODE)); // red
 
-        try {
-            oStorageManager.storeData(getApplicationContext()); // store data
-            uToast = Toast.makeText(getApplicationContext(), DATA_SUCCESSFULLY_STORED_MESSAGE, Toast.LENGTH_SHORT);
-            uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-            uToast.show();
-        } catch (IOException e) {
-            uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + e.getMessage(), Toast.LENGTH_SHORT);
-            uToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-            uToast.show();
-            e.printStackTrace();
-        }
-
+        new StoreDataTask() {
+            @Override
+            protected void onPostExecute(Object pO) {
+                if(pO == null) {
+                    uToast = Toast.makeText(getApplicationContext(), DATA_SUCCESSFULLY_STORED_MESSAGE, Toast.LENGTH_SHORT);
+                    uToast.show();
+                } else {
+                    uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + ((IOException) pO).getMessage(), Toast.LENGTH_SHORT);
+                    uToast.show();
+                }
+                iTempVar = 0; // reset counter
+            }
+        }.execute(getApplicationContext());
     }
 
     // enables data capturing flag
