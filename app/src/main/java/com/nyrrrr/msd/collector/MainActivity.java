@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import static java.util.Arrays.asList;
 
@@ -26,7 +27,7 @@ import static java.util.Arrays.asList;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 30;
+    private static final int INTEGER_MAX_DATA_LOGGED = 2;
 
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
 
@@ -58,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float fKeyPositionY;
     private long lKeyDownTime;
     private long lKeyUpTime;
-
 
     /*
      * standard methods
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 oData.gamma = pSensorEvent.values[2];
             }
             if (!sKeyCodeLogVar.equals("")) {
-                // TODO
+                // store key data
                 oData.keyPressed = "KEYCODE_" + sKeyCodeLogVar;
                 oData.key_x = fKeyPositionX;
                 oData.key_y = fKeyPositionY;
@@ -113,11 +113,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 sKeyCodeLogVar = "";
                 fKeyPositionX = fKeyPositionY = 0;
                 lKeyDownTime = lKeyUpTime = 0;
-            }
+            } else return; // don't save
             if (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0) {
 
-
-                // TODO key pos x, y
                 oStorageManager.addSensorDataLogEntry(oData);
                 Log.d("Data", oData.toCSVString());
                 oData = null;
@@ -148,17 +146,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void initKeyboard() {
         Button currentButton;
         ViewGroup keyboard = (ViewGroup) findViewById(R.id.keyboard);
-        for (int i = 0; i < keyboard.getChildCount(); i++) {
+        for (int i = 0; i < (keyboard != null ? keyboard.getChildCount() : 0); i++) {
             currentButton = (Button) keyboard.getChildAt(i);
             currentButton.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View pView, MotionEvent pMotionEvent) {
                     if(pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
-                        sKeyCodeLogVar = ((Button) pView).getText().toString();
-                        fKeyPositionX = pMotionEvent.getRawX();
-                        fKeyPositionY = pMotionEvent.getRawY();
-                        lKeyDownTime = pMotionEvent.getDownTime();
-                        lKeyUpTime = pMotionEvent.getEventTime();
+                        iTempVar = aKeyCountLog.get(Integer.parseInt(((Button) pView).getText().toString()));
+                        if(iTempVar < INTEGER_MAX_DATA_LOGGED) {
+                            sKeyCodeLogVar = ((Button) pView).getText().toString();
+                            fKeyPositionX = pMotionEvent.getRawX();
+                            fKeyPositionY = pMotionEvent.getRawY();
+                            lKeyDownTime = pMotionEvent.getDownTime();
+                            lKeyUpTime = pMotionEvent.getEventTime();
+
+                            aKeyCountLog.set(Integer.parseInt(sKeyCodeLogVar), ++iTempVar);
+                        } else {
+                            if(Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) {
+                                stopCaptureMode();
+                                uToast = Toast.makeText(getApplicationContext(), STRING_DONE_CAPTURING_MESSAGE, Toast.LENGTH_SHORT);
+                                uToast.show();
+                            }
+                        }
                     }
                     return false;
                 }
