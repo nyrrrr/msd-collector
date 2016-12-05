@@ -5,12 +5,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -41,15 +41,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
 
     private SensorManager oSensorManager;
-    private Sensor oAcceleroMeter;
-    private Sensor oGyroscope;
     private SensorReader oSensorReader;
     private StorageManager oStorageManager;
     private SensorData oData;
 
     private Button uCaptureButton;
     private Button uSaveButton;
-    private EditText uEditText;
     private Toast uToast;
 
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
@@ -63,11 +60,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * ---------------------------------------------------------------------------------------------
      */
 
-    /**
-     * First method to run when app is started.
-     *
-     * @param savedInstanceState
-     */
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -76,16 +69,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         initUI();
 
         // init sensors & persistence
-        initStorageManager();
-        initAccelerometerSensor();
-        initOrientationSensor();
+        // TODO
+//        initStorageManager();
+//        initAccelerometerSensor();
+//        initOrientationSensor();
     }
 
     /**
      * Detects when sensor values change and reacts
      * NOTE: currently it reacts to every single change
      *
-     * @param pSensorEvent
+     * @param pSensorEvent Accelerometer or Gyroscope event
      */
     @Override
     public void onSensorChanged(SensorEvent pSensorEvent) {
@@ -117,12 +111,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    /**
-     * TODO: determine sensors accuracy and frequency and make sure it stays constant
-     *
-     * @param pSensor
-     * @param pAccuracy
-     */
     @Override
     public void onAccuracyChanged(Sensor pSensor, int pAccuracy) {
     }
@@ -169,8 +157,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Save button will stop capturing and store the results.
      */
     private void initUI() {
-
-        initEditTextField();
+        // TODO
         // CAPTURE button
         initCaptureButton();
         // SAVE button
@@ -202,25 +189,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void initCaptureButton() {
         uCaptureButton = (Button) findViewById(R.id.captureButton);
-        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
+        if (uCaptureButton != null) {
+            uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
+        }
         uCaptureButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Perform action on click
-                if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_CAPTURE_TEXT) {
+                if (uCaptureButton.getText().toString().equals(CAPTURE_BUTTON_CAPTURE_TEXT)) {
                     startCaptureMode();
-                } else if (uCaptureButton.getText().toString() == CAPTURE_BUTTON_STOP_TEXT) {
+                } else if (uCaptureButton.getText().toString().equals(CAPTURE_BUTTON_STOP_TEXT)) {
                     stopCaptureMode();
                 }
             }
         });
-    }
-
-    /**
-     * monkey fix to make the input visible despite being a password field
-     */
-    private void initEditTextField() {
-        uEditText = (EditText) findViewById(R.id.codeSequenceNumberInput);
-        uEditText.setTransformationMethod(null);
     }
 
     /**
@@ -230,10 +211,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         stopCaptureMode();
         uSaveButton.setBackgroundColor(Color.parseColor(NEGATIVE_COLOR_CODE)); // red
 
-        new StoreDataTask() {
+        final AsyncTask asyncTask;
+        asyncTask = new StoreDataTask() {
             @Override
             protected void onPostExecute(Object pO) {
-                if(pO == null) {
+                if (pO == null) {
                     uToast = Toast.makeText(getApplicationContext(), DATA_SUCCESSFULLY_STORED_MESSAGE, Toast.LENGTH_SHORT);
                     uToast.show();
                 } else {
@@ -242,12 +224,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
                 iTempVar = 0; // reset counter
             }
-        }.execute(getApplicationContext());
+        };
+        asyncTask.execute(getApplicationContext());
+
     }
 
     // enables data capturing flag
     private void startCaptureMode() {
-        uEditText.setText("");
         uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
         uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // blue
         bIsInCaptureMode = true;
@@ -267,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-        oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
+        Sensor oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
         oSensorManager.registerListener(this, oAcceleroMeter, GLOBAL_SENSOR_SPEED);
     }
 
@@ -276,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * combined with the accelerometer data.
      */
     private void initOrientationSensor() {
-        oGyroscope = oSensorReader.getSingleSensorOfType(Sensor.TYPE_GYROSCOPE);
+        Sensor oGyroscope = oSensorReader.getSingleSensorOfType(Sensor.TYPE_GYROSCOPE);
         oSensorManager.registerListener(this, oGyroscope, GLOBAL_SENSOR_SPEED);
     }
 
