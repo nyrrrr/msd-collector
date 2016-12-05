@@ -8,14 +8,15 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.KeyEvent;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import static java.util.Arrays.asList;
 
@@ -52,7 +53,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
     private ArrayList<Integer> aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
     private int iTempVar = 0;
-    private int iKeyCodeLogVar = -1;
+    private String sKeyCodeLogVar = "";
+    private float fKeyPositionX;
+    private float fKeyPositionY;
+    private long lKeyDownTime;
+    private long lKeyUpTime;
 
 
     /*
@@ -70,9 +75,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // init sensors & persistence
         // TODO
-//        initStorageManager();
-//        initAccelerometerSensor();
-//        initOrientationSensor();
+        initStorageManager();
+        initAccelerometerSensor();
+        initGyroscopeSensor();
     }
 
     /**
@@ -96,55 +101,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 oData.beta = pSensorEvent.values[1];
                 oData.gamma = pSensorEvent.values[2];
             }
-            if (iKeyCodeLogVar != -1) {
-                oData.keyPressed = KeyEvent.keyCodeToString(iKeyCodeLogVar);
-                iKeyCodeLogVar = -1;
+            if (!sKeyCodeLogVar.equals("")) {
+                // TODO
+                oData.keyPressed = "KEYCODE_" + sKeyCodeLogVar;
+                oData.key_x = fKeyPositionX;
+                oData.key_y = fKeyPositionY;
+                oData.key_down = lKeyDownTime;
+                oData.key_released = lKeyUpTime;
+
+                // reset vars
+                sKeyCodeLogVar = "";
+                fKeyPositionX = fKeyPositionY = 0;
+                lKeyDownTime = lKeyUpTime = 0;
             }
             if (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0) {
 
 
                 // TODO key pos x, y
                 oStorageManager.addSensorDataLogEntry(oData);
-//                Log.d("Data", oData.toCSVString());
+                Log.d("Data", oData.toCSVString());
                 oData = null;
             }
         }
     }
 
-    @Override
-    public void onAccuracyChanged(Sensor pSensor, int pAccuracy) {
-    }
-
-    /**
-     * Store relevant keys (0-9) in var for later usage
-     * Only store a certain amount per key
-     *
-     * @param pKeyCode
-     * @param pEvent
-     * @return
-     */
-    @Override
-    public boolean onKeyUp(int pKeyCode, KeyEvent pEvent) {
-        if (pKeyCode >= 7 && pKeyCode <= 16) { // if key between 0 to 9
-            if (bIsInCaptureMode) {
-                iTempVar = aKeyCountLog.get(pKeyCode - 7);
-                if (iTempVar < INTEGER_MAX_DATA_LOGGED) { // if key count is below the limit
-                    iKeyCodeLogVar = pKeyCode;
-                    aKeyCountLog.set(pKeyCode - 7, ++iTempVar);
-                } else {
-                    if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) { // sufficient amount of data captured
-                        stopCaptureMode();
-                        uToast = Toast.makeText(getApplicationContext(), STRING_DONE_CAPTURING_MESSAGE, Toast.LENGTH_SHORT);
-                        uToast.show();
-                    }
-                }
-            }
-        } else {
-            // do nothing
-            return true;
-        }
-        return false;
-    }
 
     /*
      * custom methods
@@ -157,11 +137,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Save button will stop capturing and store the results.
      */
     private void initUI() {
-        // TODO
+        // KEYBOARD
+        initKeyboard();
         // CAPTURE button
         initCaptureButton();
         // SAVE button
         initSaveButton();
+    }
+
+    private void initKeyboard() {
+        Button currentButton;
+        ViewGroup keyboard = (ViewGroup) findViewById(R.id.keyboard);
+        for (int i = 0; i < keyboard.getChildCount(); i++) {
+            currentButton = (Button) keyboard.getChildAt(i);
+            currentButton.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View pView, MotionEvent pMotionEvent) {
+                    if(pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
+                        sKeyCodeLogVar = ((Button) pView).getText().toString();
+                        fKeyPositionX = pMotionEvent.getRawX();
+                        fKeyPositionY = pMotionEvent.getRawY();
+                        lKeyDownTime = pMotionEvent.getDownTime();
+                        lKeyUpTime = pMotionEvent.getEventTime();
+                    }
+                    return false;
+                }
+            });
+        }
     }
 
     /**
@@ -222,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + ((IOException) pO).getMessage(), Toast.LENGTH_SHORT);
                     uToast.show();
                 }
+                // TODO
                 iTempVar = 0; // reset counter
             }
         };
@@ -229,14 +232,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    // enables data capturing flag
+    /**
+     * enables data capturing
+     */
     private void startCaptureMode() {
         uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
         uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // blue
         bIsInCaptureMode = true;
     }
 
-    // unset flag for data capture
+    /**
+     * unset flag for data capture
+     */
     private void stopCaptureMode() {
         uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
         bIsInCaptureMode = false;
@@ -250,20 +257,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-        Sensor oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
-        oSensorManager.registerListener(this, oAcceleroMeter, GLOBAL_SENSOR_SPEED);
+        Sensor acceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
+        oSensorManager.registerListener(this, acceleroMeter, GLOBAL_SENSOR_SPEED);
     }
 
     /**
      * Set-up of Gyroscope sensor. Orientation data will be captured during runtime and
      * combined with the accelerometer data.
      */
-    private void initOrientationSensor() {
-        Sensor oGyroscope = oSensorReader.getSingleSensorOfType(Sensor.TYPE_GYROSCOPE);
-        oSensorManager.registerListener(this, oGyroscope, GLOBAL_SENSOR_SPEED);
+    private void initGyroscopeSensor() {
+        Sensor gyroscope = oSensorReader.getSingleSensorOfType(Sensor.TYPE_GYROSCOPE);
+        oSensorManager.registerListener(this, gyroscope, GLOBAL_SENSOR_SPEED);
     }
 
     private void initStorageManager() {
         oStorageManager = StorageManager.getInstance();
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor pSensor, int pAccuracy) {
     }
 }

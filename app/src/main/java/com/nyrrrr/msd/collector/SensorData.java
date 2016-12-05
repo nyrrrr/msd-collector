@@ -6,32 +6,35 @@ package com.nyrrrr.msd.collector;
  * Created by nyrrrr on 24.09.2016.
  */
 
-public class SensorData {
+class SensorData {
 
-    public float x;
-    public float y;
-    public float z;
-    public float alpha;
-    public float beta;
-    public float gamma;
+    float x;
+    float y;
+    float z;
+    float alpha;
+    float beta;
+    float gamma;
     long timestamp;
     String keyPressed;
-    int key_x;
-    int key_y;
+    float key_x;
+    float key_y;
+    long key_down;
+    long key_released;
 
-    public SensorData(long pTimestamp) {
+    SensorData(long pTimestamp) {
         timestamp = pTimestamp;
     }
 
-    public String toCSVString() {
+    String toCSVString() {
         return timestamp + ","
                 + x + "," + y + "," + z + ","
                 + alpha + "," + beta + "," + gamma + ","
-                + keyPressed + "," + key_x + "," + key_y + "\n";
+                + keyPressed + "," + key_x + "," + key_y
+                + "," + key_down + "," + key_released + "\n";
     }
 
-    public String getCsvHeaders() {
-        return "Timestamp,x,y,z,alpha,beta,gamma,keyPressed,key_x,key_y\n";
+    String getCsvHeaders() {
+        return "Timestamp,x,y,z,alpha,beta,gamma,keyPressed,key_x,key_y,key_down,key_released\n";
     }
 
 }
