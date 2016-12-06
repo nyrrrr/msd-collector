@@ -21,10 +21,6 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-
-import static java.util.Arrays.asList;
 
 /**
  * Main Class
@@ -54,18 +50,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Toast uToast;
 
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
-    private ArrayList<Integer> aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-    private int iTempCounter = 0;
+    private int iButtonCounter = 0;
     private Button[] buttonList = new Button[10];
     private int iNextButton;
-    private int iTempVar;
-    private int[] aLastKeysSelected = {-1, -1, -1};
     private Button uKeyCodesOnlyButton;
     private boolean bIsInKeyloggerMode;
     private Sensor oGyroscope;
     private Sensor oAcceleroMeter;
     private TextView oTextView;
-    private int iNumberOfKeysPressed = 0;
+    private ArrayList<Integer> aButtonPressOrder;
 
     /*
      * standard methods
@@ -173,7 +166,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oTextView.setText(STRING_KEYPRESSES_LEFT + (10 * INTEGER_MAX_DATA_LOGGED));
         oTextView.setVisibility(View.VISIBLE);
         switchSaveButtonBackground();
+        createButtonOrder();
         determineNextButtonToClick(-1);
+    }
+
+    /**
+     * Create a list of button presses with no runs longer than n = 2;
+     */
+    private void createButtonOrder() {
+        aButtonPressOrder = new ArrayList<>(10 * INTEGER_MAX_DATA_LOGGED);
+        ArrayList<Integer> subList = new ArrayList<>(10);
+
+        for (int i = 0; i < INTEGER_MAX_DATA_LOGGED; i++) {
+            for (int j = 0; j < 10; j++) {
+                subList.add(j);
+            }
+            Collections.shuffle(subList);
+            aButtonPressOrder.addAll(subList);
+            subList.clear();
+        }
     }
 
     /**
@@ -250,17 +261,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     // is capture mode on and was the button just released?
                     if ((bIsInCaptureMode || bIsInKeyloggerMode) && pMotionEvent.getAction() == MotionEvent.ACTION_UP) { // TODO use ACTION_DOWN instead?
 
-                        iTempVar = Integer.parseInt(((Button) pView).getText().toString());
+                        int parsedInteger = Integer.parseInt(((Button) pView).getText().toString());
 
                         // did the user press the correct key
-                        if (iTempVar == iNextButton) {
+                        if (parsedInteger == iNextButton) {
                             // store key data
                             if (oData == null) {
                                 if (bIsInKeyloggerMode) {
                                     oData = new SensorData(pMotionEvent.getDownTime());
                                 } else return false;
                             }
-                            oData.keyPressed = "KEYCODE_" + iTempVar + "";
+                            oData.keyPressed = "KEYCODE_" + parsedInteger + "";
                             oData.key_x = pMotionEvent.getRawX();
                             oData.key_y = pMotionEvent.getRawY();
 //                            oData.key_down = pMotionEvent.getDownTime();
@@ -268,13 +279,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                             // reset vars
                             if (bIsInKeyloggerMode || (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0)) {
-                                iNumberOfKeysPressed++;
-                                oTextView.setText(STRING_KEYPRESSES_LEFT + ((10 * INTEGER_MAX_DATA_LOGGED) - iNumberOfKeysPressed));
+                                oTextView.setText(STRING_KEYPRESSES_LEFT + ((10 * INTEGER_MAX_DATA_LOGGED) - iButtonCounter));
                                 oStorageManager.addSensorDataLogEntry(oData);
                                 Log.d("Data", oData.toCSVString());
                                 oData = null;
                             }
-                            aKeyCountLog.set(iTempVar, ++iTempCounter);
                             determineNextButtonToClick(iNextButton);
                         }
                     }
@@ -325,8 +334,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
                     uToast.show();
                 }
-                iNumberOfKeysPressed = 0;
-                aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); // reset counter
+                iButtonCounter = 0;
             }
         });
     }
@@ -384,7 +392,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + ((IOException) pO).getMessage(), Toast.LENGTH_SHORT);
                     uToast.show();
                 }
-                iTempCounter = 0; // reset counter
+                iButtonCounter = 0; // reset counter
             }
         };
         asyncTask.execute(getApplicationContext());
@@ -407,39 +415,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         }
         // enough samples for all keys?
-        if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) {
+        if (iButtonCounter == 10 * INTEGER_MAX_DATA_LOGGED) {
             if (bIsInCaptureMode) stopCaptureMode();
             else if (bIsInKeyloggerMode) stopKeyloggerMode();
             uToast = Toast.makeText(getApplicationContext(), STRING_DONE_CAPTURING_MESSAGE, Toast.LENGTH_SHORT);
             uToast.show();
-
         } else {
             // pick new button
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                iNextButton = ThreadLocalRandom.current().nextInt(0, 10);
-            } else {
-                iNextButton = new Random().nextInt((11));
-            }
-            iTempCounter = aKeyCountLog.get(iNextButton);
-            // are there enough samples of that key?
-            if (iTempCounter < INTEGER_MAX_DATA_LOGGED) {
+            iNextButton = aButtonPressOrder.get(iButtonCounter);
+            iButtonCounter++;
 
-                // prevent sequences
-                if (iNextButton == aLastKeysSelected[0] && iNextButton == aLastKeysSelected[1] && iNextButton == aLastKeysSelected[2]) {
-                    determineNextButtonToClick(iNextButton);
-                } else {
-                    // change button ui
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        buttonList[iNextButton].setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
-                    } else {
-                        buttonList[iNextButton].setBackgroundColor(Color.GREEN);
-                    }
-                    aLastKeysSelected[0] = aLastKeysSelected[1];
-                    aLastKeysSelected[1] = aLastKeysSelected[2];
-                    aLastKeysSelected[2] = iNextButton;
-                }
+            // change button ui
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                buttonList[iNextButton].setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
             } else {
-                determineNextButtonToClick(iNextButton);
+                buttonList[iNextButton].setBackgroundColor(Color.GREEN);
             }
         }
     }
