@@ -15,6 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -41,8 +42,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final String STRING_DONE_CAPTURING_MESSAGE = "You are done capturing.\nPlease press SAVE now.";
     private static final String NEGATIVE_COLOR_CODE = "#FFFF4081";
     private static final String POSITIVE_COLOR_CODE = "#FF3F51B5";
+    private static final String STRING_KEYPRESSES_LEFT = "Key presses left: ";
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
-    private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
     private SensorManager oSensorManager;
     private SensorReader oSensorReader;
     private StorageManager oStorageManager;
@@ -63,6 +64,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean bIsInKeyloggerMode;
     private Sensor oGyroscope;
     private Sensor oAcceleroMeter;
+    private TextView oTextView;
+    private int iNumberOfKeysPressed = 0;
 
     /*
      * standard methods
@@ -115,26 +118,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * enables data capturing
      */
     private void startCaptureMode() {
+        uCaptureButton.setEnabled(false);
         uKeyCodesOnlyButton.setEnabled(false);
 
         registerSensorListeners();
 
-        uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            uSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(POSITIVE_COLOR_CODE)));
-        } else {
-            uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // red
-        } // blue
+        uCaptureButton.setText(STRING_LOGGING);
+
         bIsInCaptureMode = true;
         bIsInKeyloggerMode = false;
-        determineNextButtonToClick(-1);
 
+        prepareUI();
     }
 
     /**
      * unset flag for data capture
      */
     private void stopCaptureMode() {
+        uCaptureButton.setEnabled(true);
         uKeyCodesOnlyButton.setEnabled(true);
         uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
         bIsInCaptureMode = false;
@@ -146,20 +147,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Similar to Capture mode, but no sensor logging; keys-only
      */
     private void startKeyloggerMode() {
+        uCaptureButton.setEnabled(false);
+        uKeyCodesOnlyButton.setEnabled(false);
+
+        uKeyCodesOnlyButton.setText(STRING_LOGGING);
 
         bIsInKeyloggerMode = true;
         bIsInCaptureMode = false;
 
-        uKeyCodesOnlyButton.setText(STRING_LOGGING);
-
-        uCaptureButton.setEnabled(false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            uSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(POSITIVE_COLOR_CODE)));
-        } else {
-            uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // red
-        } // blue
-
-        determineNextButtonToClick(-1);
+        prepareUI();
     }
 
     /**
@@ -168,8 +164,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void stopKeyloggerMode() {
         uKeyCodesOnlyButton.setText(STRING_KEYCODES_ONLY);
         uCaptureButton.setEnabled(true);
+        uKeyCodesOnlyButton.setEnabled(true);
         bIsInKeyloggerMode = false;
         reInitKeyboard();
+    }
+
+    private void prepareUI() {
+        oTextView.setText(STRING_KEYPRESSES_LEFT + (10 * INTEGER_MAX_DATA_LOGGED));
+        oTextView.setVisibility(View.VISIBLE);
+        switchSaveButtonBackground();
+        determineNextButtonToClick(-1);
+    }
+
+    /**
+     * see name
+     */
+    private void switchSaveButtonBackground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            uSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(POSITIVE_COLOR_CODE)));
+        } else {
+            uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // red
+        } // blue
     }
 
     /**
@@ -206,6 +221,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         initSaveButton();
 
         initKeyCodeOnlyModeButton();
+
+        initTextView();
+    }
+
+    /**
+     * set invisible
+     */
+    private void initTextView() {
+        oTextView = (TextView) findViewById(R.id.textView);
+        if (oTextView != null) {
+            oTextView.setVisibility(View.INVISIBLE);
+        }
     }
 
     /**
@@ -241,6 +268,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                             // reset vars
                             if (bIsInKeyloggerMode || (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0)) {
+                                iNumberOfKeysPressed++;
+                                oTextView.setText(STRING_KEYPRESSES_LEFT + ((10 * INTEGER_MAX_DATA_LOGGED) - iNumberOfKeysPressed));
                                 oStorageManager.addSensorDataLogEntry(oData);
                                 Log.d("Data", oData.toCSVString());
                                 oData = null;
@@ -269,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 // Perform action on click
                 if (uCaptureButton.getText().toString().equals(CAPTURE_BUTTON_CAPTURE_TEXT)) {
                     startCaptureMode();
-                } else if (uCaptureButton.getText().toString().equals(CAPTURE_BUTTON_STOP_TEXT)) {
+                } else if (uCaptureButton.getText().toString().equals(STRING_LOGGING)) {
                     stopCaptureMode();
                 }
             }
@@ -296,6 +325,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
                     uToast.show();
                 }
+                iNumberOfKeysPressed = 0;
                 aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); // reset counter
             }
         });

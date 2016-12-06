@@ -26,7 +26,9 @@
         <Button
             android:id="@+id/btn_1"
             android:layout_columnWeight="1"
-            android:text="1" />
+            android:text="1"
+            android:layout_row="3"
+            android:layout_column="0" />
 
         <Button
             android:id="@+id/btn_2"
@@ -73,7 +75,19 @@
             android:layout_column="1"
             android:layout_columnWeight="1"
             android:text="0" />
+
     </GridLayout>
+
+    <TextView
+        android:text="TextView"
+        android:layout_margin="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:visibility="invisible"
+        android:id="@+id/textView" />
 
     <Button
         android:id="@+id/saveButton"
@@ -100,9 +114,9 @@
         android:id="@+id/keycodesOnlyButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Keycodes-only"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:text="Keycodes-only" />
 
 
 </RelativeLayout>
