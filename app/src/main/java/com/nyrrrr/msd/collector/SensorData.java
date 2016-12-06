@@ -18,8 +18,8 @@ class SensorData {
     String keyPressed;
     float key_x;
     float key_y;
-    long key_down;
-    long key_released;
+//    long key_down;
+//    long key_released;
 
     SensorData(long pTimestamp) {
         timestamp = pTimestamp;
@@ -29,8 +29,8 @@ class SensorData {
         return timestamp + ","
                 + x + "," + y + "," + z + ","
                 + alpha + "," + beta + "," + gamma + ","
-                + keyPressed + "," + key_x + "," + key_y
-                + "," + key_down + "," + key_released + "\n";
+                + keyPressed + "," + key_x + "," + key_y + "\n";
+//                + "," + key_down + "," + key_released + "\n";
     }
 
     String getCsvHeaders() {

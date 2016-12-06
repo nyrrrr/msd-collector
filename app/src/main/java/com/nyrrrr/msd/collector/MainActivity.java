@@ -31,21 +31,18 @@ import static java.util.Arrays.asList;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 2;
-
+    public static final String STRING_KEYCODES_ONLY = "Keycodes-only";
+    public static final String STRING_LOGGING = "Logging...";
+    private static final int INTEGER_MAX_DATA_LOGGED = 30;
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
-
     private static final String NO_DATA_CAPTURED_MESSAGE = "No data was captured yet!";
     private static final String DATA_SUCCESSFULLY_STORED_MESSAGE = "The captured data has been stored.";
     private static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error: ";
     private static final String STRING_DONE_CAPTURING_MESSAGE = "You are done capturing.\nPlease press SAVE now.";
-
     private static final String NEGATIVE_COLOR_CODE = "#FFFF4081";
     private static final String POSITIVE_COLOR_CODE = "#FF3F51B5";
-
     private final String CAPTURE_BUTTON_CAPTURE_TEXT = "Capture";
     private final String CAPTURE_BUTTON_STOP_TEXT = "Stop";
-
     private SensorManager oSensorManager;
     private SensorReader oSensorReader;
     private StorageManager oStorageManager;
@@ -58,10 +55,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
     private ArrayList<Integer> aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
     private int iTempCounter = 0;
-    private String sKeyCodeLogVar = "";
     private Button[] buttonList = new Button[10];
     private int iNextButton;
     private int iTempVar;
+    private int[] aLastKeysSelected = {-1, -1, -1};
+    private Button uKeyCodesOnlyButton;
+    private boolean bIsInKeyloggerMode;
+    private Sensor oGyroscope;
+    private Sensor oAcceleroMeter;
 
     /*
      * standard methods
@@ -77,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         initUI();
 
         // init sensors & persistence
-        // TODO
         initStorageManager();
         initAccelerometerSensor();
         initGyroscopeSensor();
@@ -107,10 +107,89 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    /*
+     * --------------------------------- Modes -----------------------------------------------------
+     */
+
+    /**
+     * enables data capturing
+     */
+    private void startCaptureMode() {
+        uKeyCodesOnlyButton.setEnabled(false);
+
+        registerSensorListeners();
+
+        uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            uSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(POSITIVE_COLOR_CODE)));
+        } else {
+            uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // red
+        } // blue
+        bIsInCaptureMode = true;
+        bIsInKeyloggerMode = false;
+        determineNextButtonToClick(-1);
+
+    }
+
+    /**
+     * unset flag for data capture
+     */
+    private void stopCaptureMode() {
+        uKeyCodesOnlyButton.setEnabled(true);
+        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
+        bIsInCaptureMode = false;
+        unregisterSensorListeners();
+        reInitKeyboard();
+    }
+
+    /**
+     * Similar to Capture mode, but no sensor logging; keys-only
+     */
+    private void startKeyloggerMode() {
+
+        bIsInKeyloggerMode = true;
+        bIsInCaptureMode = false;
+
+        uKeyCodesOnlyButton.setText(STRING_LOGGING);
+
+        uCaptureButton.setEnabled(false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            uSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(POSITIVE_COLOR_CODE)));
+        } else {
+            uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // red
+        } // blue
+
+        determineNextButtonToClick(-1);
+    }
+
+    /**
+     * Stop keylogging mode
+     */
+    private void stopKeyloggerMode() {
+        uKeyCodesOnlyButton.setText(STRING_KEYCODES_ONLY);
+        uCaptureButton.setEnabled(true);
+        bIsInKeyloggerMode = false;
+        reInitKeyboard();
+    }
+
+    /**
+     * Register sensor listeners
+     */
+    private void registerSensorListeners() {
+        oSensorManager.registerListener(this, oAcceleroMeter, GLOBAL_SENSOR_SPEED);
+        oSensorManager.registerListener(this, oGyroscope, GLOBAL_SENSOR_SPEED);
+    }
+
+    /**
+     * unregister sensor listeners
+     */
+    private void unregisterSensorListeners() {
+        oSensorManager.unregisterListener(this, oAcceleroMeter);
+        oSensorManager.unregisterListener(this, oGyroscope);
+    }
 
     /*
-     * custom methods
-     * ---------------------------------------------------------------------------------------------
+     * --------------------------------- UI --------------------------------------------------------
      */
 
     /**
@@ -125,6 +204,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         initCaptureButton();
         // SAVE button
         initSaveButton();
+
+        initKeyCodeOnlyModeButton();
     }
 
     /**
@@ -140,29 +221,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 @Override
                 public boolean onTouch(View pView, MotionEvent pMotionEvent) {
                     // is capture mode on and was the button just released?
-                    if (bIsInCaptureMode && pMotionEvent.getAction() == MotionEvent.ACTION_UP) { // TODO use ACTION_DOWN instead?
+                    if ((bIsInCaptureMode || bIsInKeyloggerMode) && pMotionEvent.getAction() == MotionEvent.ACTION_UP) { // TODO use ACTION_DOWN instead?
 
                         iTempVar = Integer.parseInt(((Button) pView).getText().toString());
 
                         // did the user press the correct key
                         if (iTempVar == iNextButton) {
                             // store key data
-                            oData.keyPressed = "KEYCODE_" + iTempVar + "";;
+                            if (oData == null) {
+                                if (bIsInKeyloggerMode) {
+                                    oData = new SensorData(pMotionEvent.getDownTime());
+                                } else return false;
+                            }
+                            oData.keyPressed = "KEYCODE_" + iTempVar + "";
                             oData.key_x = pMotionEvent.getRawX();
                             oData.key_y = pMotionEvent.getRawY();
-                            oData.key_down = pMotionEvent.getDownTime();
-                            oData.key_released = pMotionEvent.getEventTime();
+//                            oData.key_down = pMotionEvent.getDownTime();
+//                            oData.key_released = pMotionEvent.getEventTime();
 
                             // reset vars
-                            if (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0) {
+                            if (bIsInKeyloggerMode || (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0)) {
                                 oStorageManager.addSensorDataLogEntry(oData);
                                 Log.d("Data", oData.toCSVString());
                                 oData = null;
                             }
                             aKeyCountLog.set(iTempVar, ++iTempCounter);
                             determineNextButtonToClick(iNextButton);
-                        } else {
-                            // TODO
                         }
                     }
                     return false;
@@ -170,26 +254,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             });
             buttonList[Integer.parseInt(currentButton.getText().toString())] = currentButton;
         }
-    }
-
-    /**
-     * Register onClick listener on save button.
-     * Save button stops data capturing process and stores data
-     */
-    private void initSaveButton() {
-        uSaveButton = (Button) findViewById(R.id.saveButton);
-        uSaveButton.setBackgroundColor(Color.parseColor((NEGATIVE_COLOR_CODE))); // red
-        uSaveButton.setOnClickListener(new View.OnClickListener() { // onClick
-            public void onClick(View v) {
-                if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
-                    triggerStorageOfLoggedData();
-                } else { // if list is empty, show warning instead
-                    uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
-                    uToast.show();
-                }
-                aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); // reset counter
-            }
-        });
     }
 
     /**
@@ -213,14 +277,74 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     /**
+     * Register onClick listener on save button.
+     * Save button stops data capturing process and stores data
+     */
+    private void initSaveButton() {
+        uSaveButton = (Button) findViewById(R.id.saveButton);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            uSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(NEGATIVE_COLOR_CODE)));
+        } else {
+            uSaveButton.setBackgroundColor(Color.parseColor((NEGATIVE_COLOR_CODE))); // red
+        }
+        uSaveButton.setOnClickListener(new View.OnClickListener() { // onClick
+            public void onClick(View v) {
+                if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
+                    triggerStorageOfLoggedData();
+                } else { // if list is empty, show warning instead
+                    uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
+                    uToast.show();
+                }
+                aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)); // reset counter
+            }
+        });
+    }
+
+    private void initKeyCodeOnlyModeButton() {
+        uKeyCodesOnlyButton = (Button) findViewById(R.id.keycodesOnlyButton);
+        if (uKeyCodesOnlyButton != null) {
+            uKeyCodesOnlyButton.setText(STRING_KEYCODES_ONLY); // TODO
+        }
+        uKeyCodesOnlyButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Perform action on click
+                if (uKeyCodesOnlyButton.getText().toString().equals(STRING_KEYCODES_ONLY)) { // TODO
+                    startKeyloggerMode();
+                } else if (uKeyCodesOnlyButton.getText().toString().equals(STRING_LOGGING)) { // TODO
+                    stopKeyloggerMode();
+                }
+            }
+        });
+    }
+
+    /*
+     * --------------------------------- Helper functions ------------------------------------------
+     */
+
+    private void reInitKeyboard() {
+        for (Button button : buttonList) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                button.setBackgroundTintList(ColorStateList.valueOf(Color.LTGRAY));
+            } else {
+                button.setBackgroundColor(Color.LTGRAY);
+            }
+        }
+    }
+
+    /**
      * Reset Capture Mode and store logged sensor data
      */
     private void triggerStorageOfLoggedData() {
-        stopCaptureMode();
-        uSaveButton.setBackgroundColor(Color.parseColor(NEGATIVE_COLOR_CODE)); // red
+        if (bIsInCaptureMode) stopCaptureMode();
+        else if (bIsInKeyloggerMode) stopKeyloggerMode();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            uSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(NEGATIVE_COLOR_CODE)));
+        } else {
+            uSaveButton.setBackgroundColor(Color.parseColor((NEGATIVE_COLOR_CODE))); // red
+        }
 
-        final AsyncTask asyncTask;
-        asyncTask = new StoreDataTask() {
+        final AsyncTask asyncTask = new StoreDataTask() {
             @Override
             protected void onPostExecute(Object pO) {
                 if (pO == null) {
@@ -238,7 +362,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     /**
-     * Determines which button the user is supposed to press next
+     * Determine which button the user is supposed to press next.
+     *
+     * @param pCurrentButton last pressed button
+     * @// TODO: 06.12.2016 prevent "infinited" loop
      */
     private void determineNextButtonToClick(int pCurrentButton) {
         // change old button back to normal
@@ -251,48 +378,45 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
         // enough samples for all keys?
         if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) {
-            stopCaptureMode();
+            if (bIsInCaptureMode) stopCaptureMode();
+            else if (bIsInKeyloggerMode) stopKeyloggerMode();
             uToast = Toast.makeText(getApplicationContext(), STRING_DONE_CAPTURING_MESSAGE, Toast.LENGTH_SHORT);
             uToast.show();
-            return;
-        }
-        // pick new button
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            iNextButton = ThreadLocalRandom.current().nextInt(0, 10);
+
         } else {
-            iNextButton = new Random().nextInt((11));
-        }
-        iTempCounter = aKeyCountLog.get(iNextButton);
-        if (iTempCounter < INTEGER_MAX_DATA_LOGGED) {
-            // change button ui
+            // pick new button
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                buttonList[iNextButton].setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
+                iNextButton = ThreadLocalRandom.current().nextInt(0, 10);
             } else {
-                buttonList[iNextButton].setBackgroundColor(Color.GREEN);
+                iNextButton = new Random().nextInt((11));
             }
-        } else {
-            determineNextButtonToClick(iNextButton);
+            iTempCounter = aKeyCountLog.get(iNextButton);
+            // are there enough samples of that key?
+            if (iTempCounter < INTEGER_MAX_DATA_LOGGED) {
+
+                // prevent sequences
+                if (iNextButton == aLastKeysSelected[0] && iNextButton == aLastKeysSelected[1] && iNextButton == aLastKeysSelected[2]) {
+                    determineNextButtonToClick(iNextButton);
+                } else {
+                    // change button ui
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        buttonList[iNextButton].setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
+                    } else {
+                        buttonList[iNextButton].setBackgroundColor(Color.GREEN);
+                    }
+                    aLastKeysSelected[0] = aLastKeysSelected[1];
+                    aLastKeysSelected[1] = aLastKeysSelected[2];
+                    aLastKeysSelected[2] = iNextButton;
+                }
+            } else {
+                determineNextButtonToClick(iNextButton);
+            }
         }
-
     }
 
-    /**
-     * enables data capturing
+    /*
+     * --------------------------------- Sensors ---------------------------------------------------
      */
-    private void startCaptureMode() {
-        uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
-        uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // blue
-        bIsInCaptureMode = true;
-        determineNextButtonToClick(-1);
-    }
-
-    /**
-     * unset flag for data capture
-     */
-    private void stopCaptureMode() {
-        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
-        bIsInCaptureMode = false;
-    }
 
     /**
      * Set-up of accelerometer sensor for data capturing.
@@ -302,8 +426,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (oSensorReader == null) oSensorReader = new SensorReader(oSensorManager);
 
-        Sensor acceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
-        oSensorManager.registerListener(this, acceleroMeter, GLOBAL_SENSOR_SPEED);
+        oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
     }
 
     /**
@@ -311,10 +434,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * combined with the accelerometer data.
      */
     private void initGyroscopeSensor() {
-        Sensor gyroscope = oSensorReader.getSingleSensorOfType(Sensor.TYPE_GYROSCOPE);
-        oSensorManager.registerListener(this, gyroscope, GLOBAL_SENSOR_SPEED);
+        oGyroscope = oSensorReader.getSingleSensorOfType(Sensor.TYPE_GYROSCOPE);
     }
 
+    /**
+     * Init Storage Manager
+     */
     private void initStorageManager() {
         oStorageManager = StorageManager.getInstance();
     }

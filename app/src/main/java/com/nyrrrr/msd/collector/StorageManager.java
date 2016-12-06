@@ -3,8 +3,6 @@ package com.nyrrrr.msd.collector;
 import android.content.Context;
 import android.util.Log;
 
-import org.json.JSONException;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,29 +15,26 @@ import java.util.List;
  * Created by nyrrrr on 27.09.2016.
  */
 
-public class StorageManager {
+class StorageManager {
 
     private static final String STRING_CSV_FILE_NAME = "training-data.csv";
 
     private static StorageManager oInstance = null;
 
-    public ArrayList<String> fileList;
-
-    private SensorData oSensorData;
     private List<SensorData> oSensorDataList;
 
-    protected StorageManager() {
-        oSensorDataList = new ArrayList<SensorData>();
+    private StorageManager() {
+        oSensorDataList = new ArrayList<>();
     }
 
-    public static StorageManager getInstance() {
+    static StorageManager getInstance() {
         if (oInstance == null) {
             oInstance = new StorageManager();
         }
         return oInstance;
     }
 
-    public void addSensorDataLogEntry(SensorData oData) {
+    void addSensorDataLogEntry(SensorData oData) {
         oSensorDataList.add(oData);
     }
 
@@ -61,12 +56,10 @@ public class StorageManager {
      * Create and save data file (TIMESTAMP-msd-data.json).
      * The list of data will first be converted to JSON.
      *
-     * @param pAppContext
-     * @return boolean  - true for successful save
+     * @param pAppContext app context
      * @throws IOException
-     * @throws JSONException
      */
-    public void storeData(Context pAppContext) throws IOException {
+    void storeData(Context pAppContext) throws IOException {
 
         String fileName = oSensorDataList.get(0).timestamp + "-";
 
@@ -86,7 +79,7 @@ public class StorageManager {
      *
      * @return int
      */
-    public int getSensorDataLogLength() {
+    int getSensorDataLogLength() {
         return oSensorDataList.size();
     }
 

@@ -11,17 +11,15 @@ import java.io.IOException;
  * Created by nyrrrr on 04.12.2016.
  */
 
-public class StoreDataTask extends AsyncTask {
-
-    StorageManager oStoreManager;
+class StoreDataTask extends AsyncTask {
 
     @Override
     protected Object doInBackground(Object[] pObjects) {
-        oStoreManager = StorageManager.getInstance();
+        StorageManager storeManager = StorageManager.getInstance();
         try {
-            oStoreManager.storeData((Context) pObjects[0]);
+            storeManager.storeData((Context) pObjects[0]);
         } catch (IOException e) {
-            Toast.makeText((Context) pObjects[0], "Unexpected Error: " + e.getMessage(), Toast.LENGTH_SHORT);
+            Toast.makeText((Context) pObjects[0], "Unexpected Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
             return e;
         }
