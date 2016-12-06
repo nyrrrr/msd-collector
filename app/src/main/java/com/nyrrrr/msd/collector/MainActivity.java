@@ -1,11 +1,13 @@
 package com.nyrrrr.msd.collector;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,6 +20,8 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Arrays.asList;
 
@@ -53,12 +57,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private boolean bIsInCaptureMode = false; // in capture mode, the app collects data and logs it
     private ArrayList<Integer> aKeyCountLog = new ArrayList<>(asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-    private int iTempVar = 0;
+    private int iTempCounter = 0;
     private String sKeyCodeLogVar = "";
-    private float fKeyPositionX;
-    private float fKeyPositionY;
-    private long lKeyDownTime;
-    private long lKeyUpTime;
+    private Button[] buttonList = new Button[10];
+    private int iNextButton;
+    private int iTempVar;
 
     /*
      * standard methods
@@ -101,25 +104,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 oData.beta = pSensorEvent.values[1];
                 oData.gamma = pSensorEvent.values[2];
             }
-            if (!sKeyCodeLogVar.equals("")) {
-                // store key data
-                oData.keyPressed = "KEYCODE_" + sKeyCodeLogVar;
-                oData.key_x = fKeyPositionX;
-                oData.key_y = fKeyPositionY;
-                oData.key_down = lKeyDownTime;
-                oData.key_released = lKeyUpTime;
-
-                // reset vars
-                sKeyCodeLogVar = "";
-                fKeyPositionX = fKeyPositionY = 0;
-                lKeyDownTime = lKeyUpTime = 0;
-            } else return; // don't save
-            if (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0) {
-
-                oStorageManager.addSensorDataLogEntry(oData);
-                Log.d("Data", oData.toCSVString());
-                oData = null;
-            }
         }
     }
 
@@ -143,35 +127,48 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         initSaveButton();
     }
 
+    /**
+     * Init my custom keyboard.
+     * Register OnTouchListeners on Buttons.
+     */
     private void initKeyboard() {
         Button currentButton;
         ViewGroup keyboard = (ViewGroup) findViewById(R.id.keyboard);
-        for (int i = 0; i < (keyboard != null ? keyboard.getChildCount() : 0); i++) {
+        for (int i = 0; i < (keyboard != null ? keyboard.getChildCount() : 0); i++) { // init all buttons
             currentButton = (Button) keyboard.getChildAt(i);
             currentButton.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View pView, MotionEvent pMotionEvent) {
-                    if(pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
-                        iTempVar = aKeyCountLog.get(Integer.parseInt(((Button) pView).getText().toString()));
-                        if(iTempVar < INTEGER_MAX_DATA_LOGGED) {
-                            sKeyCodeLogVar = ((Button) pView).getText().toString();
-                            fKeyPositionX = pMotionEvent.getRawX();
-                            fKeyPositionY = pMotionEvent.getRawY();
-                            lKeyDownTime = pMotionEvent.getDownTime();
-                            lKeyUpTime = pMotionEvent.getEventTime();
+                    // is capture mode on and was the button just released?
+                    if (bIsInCaptureMode && pMotionEvent.getAction() == MotionEvent.ACTION_UP) { // TODO use ACTION_DOWN instead?
 
-                            aKeyCountLog.set(Integer.parseInt(sKeyCodeLogVar), ++iTempVar);
-                        } else {
-                            if(Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) {
-                                stopCaptureMode();
-                                uToast = Toast.makeText(getApplicationContext(), STRING_DONE_CAPTURING_MESSAGE, Toast.LENGTH_SHORT);
-                                uToast.show();
+                        iTempVar = Integer.parseInt(((Button) pView).getText().toString());
+
+                        // did the user press the correct key
+                        if (iTempVar == iNextButton) {
+                            // store key data
+                            oData.keyPressed = "KEYCODE_" + iTempVar + "";;
+                            oData.key_x = pMotionEvent.getRawX();
+                            oData.key_y = pMotionEvent.getRawY();
+                            oData.key_down = pMotionEvent.getDownTime();
+                            oData.key_released = pMotionEvent.getEventTime();
+
+                            // reset vars
+                            if (oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0) {
+                                oStorageManager.addSensorDataLogEntry(oData);
+                                Log.d("Data", oData.toCSVString());
+                                oData = null;
                             }
+                            aKeyCountLog.set(iTempVar, ++iTempCounter);
+                            determineNextButtonToClick(iNextButton);
+                        } else {
+                            // TODO
                         }
                     }
                     return false;
                 }
             });
+            buttonList[Integer.parseInt(currentButton.getText().toString())] = currentButton;
         }
     }
 
@@ -233,11 +230,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     uToast = Toast.makeText(getApplicationContext(), UNEXPECTED_ERROR_MESSAGE + ((IOException) pO).getMessage(), Toast.LENGTH_SHORT);
                     uToast.show();
                 }
-                // TODO
-                iTempVar = 0; // reset counter
+                iTempCounter = 0; // reset counter
             }
         };
         asyncTask.execute(getApplicationContext());
+
+    }
+
+    /**
+     * Determines which button the user is supposed to press next
+     */
+    private void determineNextButtonToClick(int pCurrentButton) {
+        // change old button back to normal
+        if (pCurrentButton != -1) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                buttonList[pCurrentButton].setBackgroundTintList(ColorStateList.valueOf(Color.LTGRAY));
+            } else {
+                buttonList[pCurrentButton].setBackgroundColor(Color.LTGRAY);
+            }
+        }
+        // enough samples for all keys?
+        if (Collections.min(aKeyCountLog) == INTEGER_MAX_DATA_LOGGED) {
+            stopCaptureMode();
+            uToast = Toast.makeText(getApplicationContext(), STRING_DONE_CAPTURING_MESSAGE, Toast.LENGTH_SHORT);
+            uToast.show();
+            return;
+        }
+        // pick new button
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            iNextButton = ThreadLocalRandom.current().nextInt(0, 10);
+        } else {
+            iNextButton = new Random().nextInt((11));
+        }
+        iTempCounter = aKeyCountLog.get(iNextButton);
+        if (iTempCounter < INTEGER_MAX_DATA_LOGGED) {
+            // change button ui
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                buttonList[iNextButton].setBackgroundTintList(ColorStateList.valueOf(Color.GREEN));
+            } else {
+                buttonList[iNextButton].setBackgroundColor(Color.GREEN);
+            }
+        } else {
+            determineNextButtonToClick(iNextButton);
+        }
 
     }
 
@@ -248,6 +283,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         uCaptureButton.setText(CAPTURE_BUTTON_STOP_TEXT);
         uSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // blue
         bIsInCaptureMode = true;
+        determineNextButtonToClick(-1);
     }
 
     /**

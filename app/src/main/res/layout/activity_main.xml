@@ -70,19 +70,19 @@
 
         <Button
             android:id="@+id/btn_0"
-            android:layout_columnWeight="1"
             android:layout_column="1"
+            android:layout_columnWeight="1"
             android:text="0" />
     </GridLayout>
 
     <Button
         android:id="@+id/saveButton"
-        android:layout_marginRight="3dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
+        android:layout_marginRight="3dp"
         android:background="#FF3F51B5"
         android:text="Save"
         android:textColor="@android:color/background_light" />
