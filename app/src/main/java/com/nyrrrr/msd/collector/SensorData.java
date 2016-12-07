@@ -39,7 +39,7 @@ class SensorData {
     }
 
     String getCsvHeaders() {
-        return "Timestamp,x,y,z,alpha,beta,gamma,keyPressed,key_x,key_y,key_down,key_released\n";
+        return "Timestamp,x,y,z,alpha,beta,gamma,keyPressed,key_x,key_y\n";
     }
 
 }
