@@ -10,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +28,7 @@ import java.util.Collections;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 2; // 30 pairs per key
+    private static final int INTEGER_MAX_DATA_LOGGED = 30; // 30 pairs per key
 
     private static final String STRING_KEYCODES_ONLY = "Keys";
     private static final String CAPTURE_BUTTON_CAPTURE_TEXT = "Sensor+Keys";
@@ -63,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private ArrayList<Integer> aButtonPressOrder;
 
     private MachineState fsmState;
+    private boolean bIsStoppingCaptureMode = false;
 
     /*
      * standard methods
@@ -79,7 +79,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         startInitMode();
     }
 
-    int i = 0;
     /**
      * Detects when sensor values change and reacts
      * NOTE: currently it reacts to every single change
@@ -88,8 +87,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     @Override
     public void onSensorChanged(SensorEvent pSensorEvent) {
-        i++;
-        if(true) return;
+
         if (fsmState == MachineState.CAPTURE) {
             // create new data object
             if (oData == null) oData = new SensorData();
@@ -106,6 +104,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (isSensorDataObjectComplete(oData)) {
                 oStorageManager.addSensorDataLogEntry(oData);
                 oData = null;
+            }
+            if (bIsStoppingCaptureMode) {
+                startSaveMode();
             }
         }
     }
@@ -132,8 +133,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     oData = createDataObject(pMotionEvent);
                 } else {
                     oData.keyPressed = "KEYCODE_" + iNextButton;
-                    oData.key_x = pMotionEvent.getRawX();
-                    oData.key_y = pMotionEvent.getRawY();
+                    oData.key_x = (int) pMotionEvent.getRawX();
+                    oData.key_y = (int) pMotionEvent.getRawY();
                 }
                 // correct mode?
                 if (fsmState == MachineState.KEYLOGGER) { // KEYLOGGER
@@ -185,8 +186,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorData createDataObject(MotionEvent pMotionEvent) {
         SensorData data = new SensorData();
         data.keyPressed = "KEYCODE_" + iNextButton;
-        data.key_x = pMotionEvent.getRawX();
-        data.key_y = pMotionEvent.getRawY();
+        data.key_x = (int) pMotionEvent.getRawX();
+        data.key_y = (int) pMotionEvent.getRawY();
         return data;
     }
 
@@ -218,13 +219,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             initAccelerometerSensor();
             initGyroscopeSensor();
         } else {
-            if(fsmState.possibleFollowUps().contains(MachineState.INIT)) {
+            if (fsmState.possibleFollowUps().contains(MachineState.INIT)) {
                 fsmState = MachineState.INIT;
 
                 iNextButton = -1;
                 iCurrentButton = -1;
                 oData = null;
                 aButtonPressOrder = null;
+                bIsStoppingCaptureMode = false;
 
                 // (re)color keyboard
                 for (Button currentButton : buttonList) {
@@ -277,17 +279,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void stopCaptureMode(SensorData pData) {
         //TODO
-//        while (true) {
-//            if (isSensorDataObjectComplete(pData)) {
-//                oStorageManager.addSensorDataLogEntry(pData);
-//                unregisterSensorListeners();
-//                break;
-//            }
-//        }
-        Log.d("EVENT COUNT", i+"");
-//        if (fsmState.possibleFollowUps().contains(MachineState.SAVE)) {
-//            startSaveMode();
-//        }
+        bIsStoppingCaptureMode = true;
+
+        // TODO start save mode
     }
 
     /**
@@ -316,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void startSaveMode() {
         if (fsmState.possibleFollowUps().contains(MachineState.SAVE)) {
+            if (fsmState == MachineState.CAPTURE) unregisterSensorListeners();
             fsmState = MachineState.SAVE;
             Toast.makeText(getApplicationContext(), STRING_PREPARE_SAVING, Toast.LENGTH_SHORT).show();
             // store data
@@ -458,7 +453,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             saveButton.setOnClickListener(new View.OnClickListener() { // onClick
                 public void onClick(View v) {
                     if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
-                        if (fsmState == MachineState.CAPTURE) stopCaptureMode(oData);
+                        if (fsmState == MachineState.CAPTURE) startSaveMode();
                         else stopKeyloggerMode();
                     } else { // if list is empty, show warning instead
                         uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);

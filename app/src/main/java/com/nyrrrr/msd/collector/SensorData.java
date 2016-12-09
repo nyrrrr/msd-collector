@@ -1,8 +1,5 @@
 package com.nyrrrr.msd.collector;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 /**
  * Sensor Data object used to be saved later on
  * Stores Accelerometer data and orientation
@@ -18,10 +15,9 @@ class SensorData {
     float beta;
     float gamma;
     long timestamp;
-    private String dateTime;
     String keyPressed;
-    float key_x;
-    float key_y;
+    int key_x;
+    int key_y;
 
     SensorData () {
         this(System.currentTimeMillis());
@@ -29,23 +25,16 @@ class SensorData {
 
     private SensorData(long pTimeStamp) {
         timestamp = pTimeStamp;
-        dateTime = getSimpleDateFormat(timestamp);
     }
 
     String toCSVString() {
-        return timestamp + "," + dateTime + ","
+        return timestamp + ","
                 + x + "," + y + "," + z + ","
                 + alpha + "," + beta + "," + gamma + ","
                 + keyPressed + "," + key_x + "," + key_y + "\n";
     }
 
     String getCsvHeaders() {
-        return "Timestamp,DateTime,x,y,z,alpha,beta,gamma,keyPressed,key_x,key_y\n";
-    }
-
-
-    private static String getSimpleDateFormat(long pTimestamp) {
-        SimpleDateFormat date = new SimpleDateFormat("dd.MM.yyyy' 'HH:mm:ss:SSSS");
-        return date.format(new Date(pTimestamp));
+        return "Timestamp,x,y,z,alpha,beta,gamma,keyPressed,key_x,key_y";
     }
 }

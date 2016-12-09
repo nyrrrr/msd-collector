@@ -3,8 +3,10 @@ package com.nyrrrr.msd.collector;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,22 +37,8 @@ class StorageManager {
     }
 
     void addSensorDataLogEntry(SensorData pData) {
-        //oSensorDataList.add(pData);
-        Log.d("CSV", pData.toCSVString());
-    }
-
-    /**
-     * Convert List of SensorData to CSV String.
-     * Can also remove unnecessary entries from the original list
-     *
-     * @return CSV String
-     */
-    private String convertSensorDataLogToCSV() {
-        String csvString = oSensorDataList.get(0).getCsvHeaders();
-        for (SensorData dataObject : oSensorDataList) {
-            csvString += dataObject.toCSVString();
-        }
-        return csvString;
+        oSensorDataList.add(pData);
+        if(pData.keyPressed != null) Log.d("CSV", pData.toCSVString());
     }
 
     /**
@@ -65,10 +53,16 @@ class StorageManager {
         String fileName = oSensorDataList.get(0).timestamp + "-";
 
         // write csv
-        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_CSV_FILE_NAME);
-        file.write(convertSensorDataLogToCSV());
-        file.flush();
-        file.close();
+        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_CSV_FILE_NAME, true);
+        BufferedWriter bw = new BufferedWriter(file);
+        PrintWriter out = new PrintWriter(bw);
+
+        out.println(oSensorDataList.get(0).getCsvHeaders());
+        for(SensorData dataObject : oSensorDataList) {
+            out.print(dataObject.toCSVString());
+        }
+
+        out.close();
 
         Log.d("Data logged", oSensorDataList.size() + "");
 
