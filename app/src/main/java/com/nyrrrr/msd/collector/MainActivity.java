@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -27,7 +28,7 @@ import java.util.Collections;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 2; // 30 pairs per key
+    private static final int INTEGER_MAX_DATA_LOGGED = 30; // 30 pairs per key
 
     private static final String STRING_KEYCODES_ONLY = "Keys";
     private static final String CAPTURE_BUTTON_CAPTURE_TEXT = "Sensor+Keys";
@@ -35,7 +36,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final String NO_DATA_CAPTURED_MESSAGE = "No data was captured yet!";
     private static final String DATA_SUCCESSFULLY_STORED_MESSAGE = "The captured data has been stored.";
     private static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error: ";
-    private static final String STRING_DONE_CAPTURING_MESSAGE = "You are done capturing.\nPlease press SAVE now.";
     private static final String STRING_KEYPRESSES_LEFT = "Key presses left: ";
     private static final String NEGATIVE_COLOR_CODE = "#FFFF4081";
     private static final String POSITIVE_COLOR_CODE = "#FF3F51B5";
@@ -61,7 +61,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private ArrayList<Integer> aButtonPressOrder;
 
     private MachineState fsmState;
-    private int i = 0;
 
     /*
      * standard methods
@@ -168,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void updateButtonPressTextView(TextView pTextView, ArrayList<Integer> pButtonPressOrder) {
-        pTextView.setText(STRING_KEYPRESSES_LEFT + pButtonPressOrder.size());
+        pTextView.setText(MessageFormat.format("{0}{1}", new Object[]{STRING_KEYPRESSES_LEFT, pButtonPressOrder.size()}));
     }
 
     /**
@@ -227,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /**
      * unset flag for data capture
      *
-     * @param pData
+     * @param pData SensorData object that needs to be logged before saving
      */
     private void stopCaptureMode(SensorData pData) {
         oStorageManager.addSensorDataLogEntry(pData);
@@ -274,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /**
      * Create a list of button presses with no runs longer than n = 2;
      *
-     * @param pNumberOfLogsPerKey
+     * @param pNumberOfLogsPerKey determineshow often each key needs to be pressed
      */
     private ArrayList<Integer> createButtonOrder(int pNumberOfLogsPerKey) {
         aButtonPressOrder = new ArrayList<>(10 * pNumberOfLogsPerKey);
@@ -345,7 +344,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void initUI() {
         // KEYBOARD
-        buttonList = initKeyboard(); // TODO
+        buttonList = initKeyboard();
         // CAPTURE button
         uCaptureButton = initCaptureButton();
         // SAVE button
@@ -404,18 +403,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private Button initCaptureButton() {
         Button captureButton = (Button) findViewById(R.id.captureButton);
-        captureButton.setEnabled(true);
+
         if (captureButton != null) {
+            captureButton.setEnabled(true);
             captureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
-        }
-        captureButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on click
-                if (((Button) v).getText().toString().equals(CAPTURE_BUTTON_CAPTURE_TEXT)) {
-                    startCaptureMode();
+            captureButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    // Perform action on click
+                    if (((Button) v).getText().toString().equals(CAPTURE_BUTTON_CAPTURE_TEXT)) {
+                        startCaptureMode();
+                    }
                 }
-            }
-        });
+            });
+        }
 
         return captureButton;
     }
@@ -426,23 +426,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private Button initSaveButton() {
         Button saveButton = (Button) findViewById(R.id.saveButton);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            saveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(NEGATIVE_COLOR_CODE)));
-        } else {
-            saveButton.setBackgroundColor(Color.parseColor((NEGATIVE_COLOR_CODE))); // red
-        }
-        saveButton.setOnClickListener(new View.OnClickListener() { // onClick
-            public void onClick(View v) {
-                if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
-                    if(fsmState == MachineState.CAPTURE) stopCaptureMode(oData);
-                    else stopKeyloggerMode();
-                } else { // if list is empty, show warning instead
-                    uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
-                    uToast.show();
-                }
+        if (saveButton != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                saveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(NEGATIVE_COLOR_CODE)));
+            } else {
+                saveButton.setBackgroundColor(Color.parseColor((NEGATIVE_COLOR_CODE))); // red
             }
-        });
+            saveButton.setOnClickListener(new View.OnClickListener() { // onClick
+                public void onClick(View v) {
+                    if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
+                        if (fsmState == MachineState.CAPTURE) stopCaptureMode(oData);
+                        else stopKeyloggerMode();
+                    } else { // if list is empty, show warning instead
+                        uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
+                        uToast.show();
+                    }
+                }
+            });
+        }
         return saveButton;
     }
 
@@ -451,24 +452,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private Button initKeyCodeOnlyModeButton() {
         Button keylogButton = (Button) findViewById(R.id.keycodesOnlyButton);
-        keylogButton.setEnabled(true);
+
         if (keylogButton != null) {
             keylogButton.setText(STRING_KEYCODES_ONLY);
-        }
-        keylogButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Perform action on click
-                if (((Button) v).getText().toString().equals(STRING_KEYCODES_ONLY)) {
-                    startKeyloggerMode();
+            keylogButton.setEnabled(true);
+            keylogButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    // Perform action on click
+                    if (((Button) v).getText().toString().equals(STRING_KEYCODES_ONLY)) {
+                        startKeyloggerMode();
+                    }
                 }
-            }
-        });
+            });
+        }
         return keylogButton;
     }
 
     private void activateButtonPressTextView(TextView pTextView) {
         if (pTextView == null) pTextView = initTextView();
-        pTextView.setText(STRING_KEYPRESSES_LEFT + (10 * INTEGER_MAX_DATA_LOGGED));
+        pTextView.setText(MessageFormat.format("{0}{1}", new Object[]{STRING_KEYPRESSES_LEFT, 10 * INTEGER_MAX_DATA_LOGGED}));
         pTextView.setVisibility(View.VISIBLE);
     }
 
@@ -476,7 +478,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         pCaptureButton.setEnabled(false);
         if (fsmState == MachineState.CAPTURE) pCaptureButton.setText(STRING_LOGGING);
         else if (fsmState == MachineState.KEYLOGGER)
-            pKeyCodesOnlyButton.setText(STRING_LOGGING); // TODO this is not working yet
+            pKeyCodesOnlyButton.setText(STRING_LOGGING);
         pKeyCodesOnlyButton.setEnabled(false);
     }
 
@@ -505,16 +507,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /*
      * --------------------------------- Helper functions ------------------------------------------
      */
-
-    private void reInitKeyboard() {
-        for (Button button : buttonList) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                button.setBackgroundTintList(ColorStateList.valueOf(Color.LTGRAY));
-            } else {
-                button.setBackgroundColor(Color.LTGRAY);
-            }
-        }
-    }
 
     /**
      * Execute AsyncTask for data storage
@@ -552,14 +544,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (pKeyOrderList.size() > 0) {
             return pKeyOrderList.remove(0);
         } else {
-            // TODO finish (state)
             return INTEGER_BUTTON_LIST_CLEARED;
         }
-    }
-
-
-    private boolean hasSensorDataObjectKeyPressedElement() {
-        return oData != null && !(oData.keyPressed == null ? "NONE" : oData.keyPressed).equals("NONE");
     }
 
     /*

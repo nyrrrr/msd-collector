@@ -18,7 +18,7 @@ class SensorData {
     float beta;
     float gamma;
     long timestamp;
-    String dateTime;
+    private String dateTime;
     String keyPressed;
     float key_x;
     float key_y;
@@ -27,7 +27,7 @@ class SensorData {
         this(System.currentTimeMillis());
     }
 
-    SensorData(long pTimeStamp) {
+    private SensorData(long pTimeStamp) {
         timestamp = pTimeStamp;
         dateTime = getSimpleDateFormat(timestamp);
     }
@@ -44,7 +44,7 @@ class SensorData {
     }
 
 
-    static String getSimpleDateFormat(long pTimestamp) {
+    private static String getSimpleDateFormat(long pTimestamp) {
         SimpleDateFormat date = new SimpleDateFormat("dd.MM.yyyy' 'HH:mm:ss:SSSS");
         return date.format(new Date(pTimestamp));
     }
