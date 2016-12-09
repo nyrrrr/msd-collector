@@ -34,8 +34,9 @@ class StorageManager {
         return oInstance;
     }
 
-    void addSensorDataLogEntry(SensorData oData) {
-        oSensorDataList.add(oData);
+    void addSensorDataLogEntry(SensorData pData) {
+        oSensorDataList.add(pData);
+        Log.d("CSV", pData.toCSVString());
     }
 
     /**

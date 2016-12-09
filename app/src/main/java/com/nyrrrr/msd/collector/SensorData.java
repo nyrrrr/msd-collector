@@ -1,6 +1,7 @@
 package com.nyrrrr.msd.collector;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Sensor Data object used to be saved later on
@@ -16,30 +17,35 @@ class SensorData {
     float alpha;
     float beta;
     float gamma;
-    public String timestampString;
-    public long timestamp;
+    long timestamp;
+    String dateTime;
     String keyPressed;
     float key_x;
     float key_y;
-//    long key_down;
-//    long key_released;
 
-    public SensorData(long pTimestamp) {
-        timestamp = pTimestamp;
-        SimpleDateFormat date = new SimpleDateFormat("MM/dd/yyyy' 'HH:mm:ss:SSSS");
-        timestampString = date.format(new java.sql.Timestamp(System.currentTimeMillis()));
+    SensorData () {
+        this(System.currentTimeMillis());
+    }
+
+    SensorData(long pTimeStamp) {
+        timestamp = pTimeStamp;
+        dateTime = getSimpleDateFormat(timestamp);
     }
 
     String toCSVString() {
-        return timestampString + ","
+        return timestamp + "," + dateTime + ","
                 + x + "," + y + "," + z + ","
                 + alpha + "," + beta + "," + gamma + ","
                 + keyPressed + "," + key_x + "," + key_y + "\n";
-//                + "," + key_down + "," + key_released + "\n";
     }
 
     String getCsvHeaders() {
-        return "Timestamp,x,y,z,alpha,beta,gamma,keyPressed,key_x,key_y\n";
+        return "Timestamp,DateTime,x,y,z,alpha,beta,gamma,keyPressed,key_x,key_y\n";
     }
 
+
+    static String getSimpleDateFormat(long pTimestamp) {
+        SimpleDateFormat date = new SimpleDateFormat("dd.MM.yyyy' 'HH:mm:ss:SSSS");
+        return date.format(new Date(pTimestamp));
+    }
 }
