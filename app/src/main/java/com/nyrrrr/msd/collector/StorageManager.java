@@ -36,7 +36,7 @@ class StorageManager {
 
     void addSensorDataLogEntry(SensorData pData) {
         oSensorDataList.add(pData);
-        Log.d("CSV", pData.toCSVString());
+        if (pData.keyPressed != null) Log.d("CSV", pData.toCSVString());
     }
 
     /**

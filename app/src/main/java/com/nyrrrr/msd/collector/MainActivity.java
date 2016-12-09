@@ -119,8 +119,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private boolean onKeyEvent(Button pView, MotionEvent pMotionEvent) {
         // filter results
-        if (pMotionEvent.getAction() == MotionEvent.ACTION_DOWN
-                || pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
+        if (pMotionEvent.getAction() == MotionEvent.ACTION_DOWN) {
             // correct key pressed?
             if (iNextButton == Integer.parseInt(pView.getText().toString())) {
 
@@ -140,32 +139,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     oData = null; // reset after add
                     updateButtonPressTextView(uTextView, aButtonPressOrder);
 
-                    // not for every event
-                    if (pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
-                        // reconfigure wars
-                        iCurrentButton = iNextButton;
-                        iNextButton = determineNextButtonToClick(aButtonPressOrder);
-                        // enough samples?
-                        if (iNextButton == INTEGER_BUTTON_LIST_CLEARED) {
-                            stopKeyloggerMode();
-                        } else {
-                            displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
-                        }
+                    // reconfigure wars
+                    iCurrentButton = iNextButton;
+                    iNextButton = determineNextButtonToClick(aButtonPressOrder);
+                    // enough samples?
+                    if (iNextButton == INTEGER_BUTTON_LIST_CLEARED) {
+                        stopKeyloggerMode();
+                    } else {
+                        displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
                     }
+
                 } else if (fsmState == MachineState.CAPTURE) { // CAPTURE
 
                     updateButtonPressTextView(uTextView, aButtonPressOrder);
-                    // not for every event
-                    if (pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
-                        // reconfigure wars
-                        iCurrentButton = iNextButton;
-                        iNextButton = determineNextButtonToClick(aButtonPressOrder);
-                        // enough samples?
-                        if (iNextButton == INTEGER_BUTTON_LIST_CLEARED) {
-                            stopCaptureMode(oData);
-                        } else {
-                            displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
-                        }
+
+                    // reconfigure wars
+                    iCurrentButton = iNextButton;
+                    iNextButton = determineNextButtonToClick(aButtonPressOrder);
+                    // enough samples?
+                    if (iNextButton == INTEGER_BUTTON_LIST_CLEARED) {
+                        stopCaptureMode(oData);
+                    } else {
+                        displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
                     }
                 }
             }
