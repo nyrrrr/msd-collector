@@ -10,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +29,7 @@ import java.util.Collections;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 30; // 30 pairs per key
+    private static final int INTEGER_MAX_DATA_LOGGED = 2; // 30 pairs per key
 
     private static final String STRING_KEYCODES_ONLY = "Keys";
     private static final String CAPTURE_BUTTON_CAPTURE_TEXT = "Sensor+Keys";
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final String POSITIVE_COLOR_CODE = "#FF3F51B5";
     private static final int GLOBAL_SENSOR_SPEED = SensorManager.SENSOR_DELAY_FASTEST;
     private static final int INTEGER_BUTTON_LIST_CLEARED = -1;
+    private static final String STRING_PREPARE_SAVING = "Trying to save the data";
 
     private SensorManager oSensorManager;
     private SensorReader oSensorReader;
@@ -72,9 +74,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        fsmState = MachineState.INIT;
+
         startInitMode();
     }
 
+    int i = 0;
     /**
      * Detects when sensor values change and reacts
      * NOTE: currently it reacts to every single change
@@ -83,7 +88,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     @Override
     public void onSensorChanged(SensorEvent pSensorEvent) {
-
+        i++;
+        if(true) return;
         if (fsmState == MachineState.CAPTURE) {
             // create new data object
             if (oData == null) oData = new SensorData();
@@ -193,19 +199,52 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * resets vars
      */
     private void startInitMode() {
-        fsmState = MachineState.INIT;
-        iNextButton = -1;
-        iCurrentButton = -1;
-        oData = null;
-        buttonList = new Button[10];
+        if (fsmState == MachineState.INIT) {
+            iNextButton = -1;
+            iCurrentButton = -1;
+            oData = null;
+            buttonList = new Button[10];
 
-        // init ui
-        initUI();
+            // init ui
+            // KEYBOARD
+            buttonList = initKeyboard();
+            uCaptureButton = initCaptureButton();
+            uKeyCodesOnlyButton = initKeyCodeOnlyModeButton();
+            uSaveButton = initSaveButton();
+            uTextView = initTextView();
 
-        // init sensors & persistence
-        initStorageManager();
-        initAccelerometerSensor();
-        initGyroscopeSensor();
+            // init sensors & persistence
+            initStorageManager();
+            initAccelerometerSensor();
+            initGyroscopeSensor();
+        } else {
+            if(fsmState.possibleFollowUps().contains(MachineState.INIT)) {
+                fsmState = MachineState.INIT;
+
+                iNextButton = -1;
+                iCurrentButton = -1;
+                oData = null;
+                aButtonPressOrder = null;
+
+                // (re)color keyboard
+                for (Button currentButton : buttonList) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        currentButton.setBackgroundTintList(ColorStateList.valueOf(Color.LTGRAY));
+                    } else {
+                        currentButton.setBackgroundColor(Color.LTGRAY);
+                    }
+                }
+                uCaptureButton.setEnabled(true);
+                uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
+                uKeyCodesOnlyButton.setEnabled(true);
+                uKeyCodesOnlyButton.setText(STRING_KEYCODES_ONLY);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    uSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(NEGATIVE_COLOR_CODE)));
+                } else {
+                    uSaveButton.setBackgroundColor(Color.parseColor((NEGATIVE_COLOR_CODE))); // red
+                }
+            }
+        }
     }
 
     /**
@@ -215,12 +254,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (!checkAvailabilityOfSensors()) return;
         if (fsmState.possibleFollowUps().contains(MachineState.CAPTURE)) {
             // UI
+            prepareKeyboardForLogging();
+            fsmState = MachineState.CAPTURE;
             prepareUiForLogging();
             // register listeners
             registerSensorListeners();
-            // set new state
-            fsmState = MachineState.CAPTURE;
+
         }
+    }
+
+    private void prepareKeyboardForLogging() {
+        // determine first button
+        aButtonPressOrder = createButtonOrder(INTEGER_MAX_DATA_LOGGED);
+        iNextButton = determineNextButtonToClick(aButtonPressOrder);
+        displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
     }
 
     /**
@@ -229,12 +276,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * @param pData SensorData object that needs to be logged before saving
      */
     private void stopCaptureMode(SensorData pData) {
-        oStorageManager.addSensorDataLogEntry(pData);
-        unregisterSensorListeners();
-
-        if (fsmState.possibleFollowUps().contains(MachineState.SAVE)) {
-            startSaveMode();
-        }
+        //TODO
+//        while (true) {
+//            if (isSensorDataObjectComplete(pData)) {
+//                oStorageManager.addSensorDataLogEntry(pData);
+//                unregisterSensorListeners();
+//                break;
+//            }
+//        }
+        Log.d("EVENT COUNT", i+"");
+//        if (fsmState.possibleFollowUps().contains(MachineState.SAVE)) {
+//            startSaveMode();
+//        }
     }
 
     /**
@@ -243,10 +296,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void startKeyloggerMode() {
         if (!checkAvailabilityOfSensors()) return;
         if (fsmState.possibleFollowUps().contains(MachineState.KEYLOGGER)) {
-            prepareUiForLogging();
-
-            // set new state
+            prepareKeyboardForLogging();
             fsmState = MachineState.KEYLOGGER;
+            prepareUiForLogging();
         }
     }
 
@@ -265,6 +317,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void startSaveMode() {
         if (fsmState.possibleFollowUps().contains(MachineState.SAVE)) {
             fsmState = MachineState.SAVE;
+            Toast.makeText(getApplicationContext(), STRING_PREPARE_SAVING, Toast.LENGTH_SHORT).show();
             // store data
             storeData();
         }
@@ -330,29 +383,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         blockUnusedButtons(uCaptureButton, uKeyCodesOnlyButton);
         activateSaveButton(uSaveButton);
         activateButtonPressTextView(uTextView);
-
-        // determine first button
-        aButtonPressOrder = createButtonOrder(INTEGER_MAX_DATA_LOGGED);
-        iNextButton = determineNextButtonToClick(aButtonPressOrder);
-        displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
-    }
-
-    /**
-     * Creates CAPTURE and SAVE button on UI and adds ClickListeners.
-     * Capture button will start capturing sensor data.
-     * Save button will stop capturing and store the results.
-     */
-    private void initUI() {
-        // KEYBOARD
-        buttonList = initKeyboard();
-        // CAPTURE button
-        uCaptureButton = initCaptureButton();
-        // SAVE button
-        uSaveButton = initSaveButton();
-
-        uKeyCodesOnlyButton = initKeyCodeOnlyModeButton();
-
-        uTextView = initTextView();
     }
 
     /**
@@ -379,12 +409,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         ViewGroup keyboard = (ViewGroup) findViewById(R.id.keyboard);
         for (int i = 0; i < (keyboard != null ? keyboard.getChildCount() : 0); i++) { // init all buttons
             currentButton = (Button) keyboard.getChildAt(i);
-            // (re)color them
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                currentButton.setBackgroundTintList(ColorStateList.valueOf(Color.LTGRAY));
-            } else {
-                currentButton.setBackgroundColor(Color.LTGRAY);
-            }
             // touch even listener
             currentButton.setOnTouchListener(new View.OnTouchListener() {
                 @Override
@@ -405,7 +429,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Button captureButton = (Button) findViewById(R.id.captureButton);
 
         if (captureButton != null) {
-            captureButton.setEnabled(true);
             captureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
             captureButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -476,7 +499,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void blockUnusedButtons(Button pCaptureButton, Button pKeyCodesOnlyButton) {
         pCaptureButton.setEnabled(false);
-        if (fsmState == MachineState.CAPTURE) pCaptureButton.setText(STRING_LOGGING);
+        if (fsmState == MachineState.CAPTURE)
+            pCaptureButton.setText(STRING_LOGGING);
         else if (fsmState == MachineState.KEYLOGGER)
             pKeyCodesOnlyButton.setText(STRING_LOGGING);
         pKeyCodesOnlyButton.setEnabled(false);
