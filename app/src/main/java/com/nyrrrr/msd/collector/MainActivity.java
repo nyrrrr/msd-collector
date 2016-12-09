@@ -98,7 +98,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 oData.beta = pSensorEvent.values[1];
                 oData.gamma = pSensorEvent.values[2];
             }
-//
             if (isSensorDataObjectComplete(oData)) {
                 oStorageManager.addSensorDataLogEntry(oData);
                 oData = null;
@@ -436,7 +435,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         saveButton.setOnClickListener(new View.OnClickListener() { // onClick
             public void onClick(View v) {
                 if (oStorageManager.getSensorDataLogLength() > 0) { // if data has already been captured
-                    startSaveMode();
+                    if(fsmState == MachineState.CAPTURE) stopCaptureMode(oData);
+                    else stopKeyloggerMode();
                 } else { // if list is empty, show warning instead
                     uToast = Toast.makeText(getApplicationContext(), NO_DATA_CAPTURED_MESSAGE, Toast.LENGTH_SHORT);
                     uToast.show();
