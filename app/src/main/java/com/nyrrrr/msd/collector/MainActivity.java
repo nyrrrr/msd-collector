@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private ArrayList<Integer> aButtonPressOrder;
 
     private MachineState fsmState;
+    private int i = 0;
 
     /*
      * standard methods
@@ -84,28 +85,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent pSensorEvent) {
 
-//        if (bIsInCaptureMode) {
+        if (fsmState == MachineState.CAPTURE) {
+            // create new data object
+            if (oData == null) oData = new SensorData();
+            // fill data obj
+            if (pSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+                oData.x = pSensorEvent.values[0];
+                oData.y = pSensorEvent.values[1];
+                oData.z = pSensorEvent.values[2];
+            } else if (pSensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                oData.alpha = pSensorEvent.values[0];
+                oData.beta = pSensorEvent.values[1];
+                oData.gamma = pSensorEvent.values[2];
+            }
 //
-//            if (oData == null) oData = new SensorData(pSensorEvent.timestamp);
-//            if (pSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-//                oData.x = pSensorEvent.values[0];
-//                oData.y = pSensorEvent.values[1];
-//                oData.z = pSensorEvent.values[2];
-//            } else if (pSensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-//                oData.alpha = pSensorEvent.values[0];
-//                oData.beta = pSensorEvent.values[1];
-//                oData.gamma = pSensorEvent.values[2];
-//            }
-//
-//            if (isSensorDataObjectComplete()) {
-//                if (bIsStopping) {
-//                    if (hasSensorDataObjectKeyPressedElement()) {
-//                        unregisterSensorListeners();
-//                    }
-//                }
-//                handleNewSensorDataLogEntry();
-//            }
-//        }
+            if (isSensorDataObjectComplete(oData)) {
+                oStorageManager.addSensorDataLogEntry(oData);
+                oData = null;
+            }
+        }
+    }
+
+    private boolean isSensorDataObjectComplete(SensorData pData) {
+        return oData != null && pData.x != 0 && pData.y != 0 && pData.z != 0 && pData.alpha != 0 && pData.beta != 0 && pData.gamma != 0;
     }
 
     /**
@@ -116,18 +118,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * @return boolean
      */
     private boolean onKeyEvent(Button pView, MotionEvent pMotionEvent) {
-        // correct mode?
-        if (fsmState == MachineState.KEYLOGGER) {
-            // filter results
-            if (pMotionEvent.getAction() == MotionEvent.ACTION_DOWN
-                    || pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
-                // correct key pressed?
-                if (iNextButton == Integer.parseInt(pView.getText().toString())) {
-                    // create data object
+        // filter results
+        if (pMotionEvent.getAction() == MotionEvent.ACTION_DOWN
+                || pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
+            // correct key pressed?
+            if (iNextButton == Integer.parseInt(pView.getText().toString())) {
+
+                // create data object
+                if (oData == null) {
                     oData = createDataObject(pMotionEvent);
+                } else {
+                    oData.keyPressed = "KEYCODE_" + iNextButton;
+                    oData.key_x = pMotionEvent.getRawX();
+                    oData.key_y = pMotionEvent.getRawY();
+                }
+                // correct mode?
+                if (fsmState == MachineState.KEYLOGGER) { // KEYLOGGER
 
                     // log data
                     oStorageManager.addSensorDataLogEntry(oData);
+                    oData = null; // reset after add
                     updateButtonPressTextView(uTextView, aButtonPressOrder);
 
                     // not for every event
@@ -142,8 +152,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
                         }
                     }
+                } else if (fsmState == MachineState.CAPTURE) { // CAPTURE
+
+                    updateButtonPressTextView(uTextView, aButtonPressOrder);
+                    // not for every event
+                    if (pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
+                        // reconfigure wars
+                        iCurrentButton = iNextButton;
+                        iNextButton = determineNextButtonToClick(aButtonPressOrder);
+                        // enough samples?
+                        if (iNextButton == INTEGER_BUTTON_LIST_CLEARED) {
+                            stopCaptureMode(oData);
+                        } else {
+                            displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
+                        }
+                    }
                 }
-            } // TODO CAPTURE mode
+            }
         }
         return false;
     }
@@ -170,20 +195,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * --------------------------------- Modes -----------------------------------------------------
      */
 
+    /**
+     * inits ui and sensors
+     * resets vars
+     */
     private void startInitMode() {
-            fsmState = MachineState.INIT;
-            iNextButton = -1;
-            iCurrentButton = -1;
-            oData = null;
-            buttonList = new Button[10];
+        fsmState = MachineState.INIT;
+        iNextButton = -1;
+        iCurrentButton = -1;
+        oData = null;
+        buttonList = new Button[10];
 
-            // init ui
-            initUI();
+        // init ui
+        initUI();
 
-            // init sensors & persistence
-            initStorageManager();
-            initAccelerometerSensor();
-            initGyroscopeSensor();
+        // init sensors & persistence
+        initStorageManager();
+        initAccelerometerSensor();
+        initGyroscopeSensor();
     }
 
     /**
@@ -194,10 +223,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (fsmState.possibleFollowUps().contains(MachineState.CAPTURE)) {
             // UI
             prepareUiForLogging();
-
             // register listeners
             registerSensorListeners();
-
             // set new state
             fsmState = MachineState.CAPTURE;
         }
@@ -205,16 +232,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /**
      * unset flag for data capture
+     *
+     * @param pData
      */
-    private void stopCaptureMode() {
-        // TODO
-//        uCaptureButton.setEnabled(true);
-//        uKeyCodesOnlyButton.setEnabled(true);
-//        uCaptureButton.setText(CAPTURE_BUTTON_CAPTURE_TEXT);
-//        bIsInKeyloggerMode = false;
-//        bIsInCaptureMode = false;
-//        bIsStopping = true;
-//        reInitKeyboard();
+    private void stopCaptureMode(SensorData pData) {
+        oStorageManager.addSensorDataLogEntry(pData);
+        unregisterSensorListeners();
+
+        if (fsmState.possibleFollowUps().contains(MachineState.SAVE)) {
+            startSaveMode();
+        }
     }
 
     /**
@@ -237,14 +264,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (fsmState.possibleFollowUps().contains(MachineState.SAVE)) {
             startSaveMode();
         }
-
-//        uKeyCodesOnlyButton.setText(STRING_KEYCODES_ONLY);
-//        uCaptureButton.setEnabled(true);
-//        uKeyCodesOnlyButton.setEnabled(true);
-//        bIsInKeyloggerMode = false;
-//        bIsStopping = false;
-//        bIsInCaptureMode = false;
-//        reInitKeyboard();
     }
 
     /**
@@ -285,8 +304,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             pSaveButton.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(POSITIVE_COLOR_CODE)));
         } else {
-            pSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // red
-        } // blue
+            pSaveButton.setBackgroundColor(Color.parseColor((POSITIVE_COLOR_CODE))); // blue
+        }
         return pSaveButton;
     }
 
@@ -384,10 +403,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             list[Integer.parseInt(currentButton.getText().toString())] = currentButton;
         }
         return list;
-    }
-
-    private boolean isSensorDataObjectComplete() {
-        return oData.x != 0 && oData.y != 0 && oData.z != 0 && oData.alpha != 0 && oData.beta != 0 && oData.gamma != 0;
     }
 
     /**
@@ -490,7 +505,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         } else {
             buttonList[pNextButton].setBackgroundColor(Color.GREEN);
         }
-
     }
 
     /*
@@ -529,10 +543,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private boolean checkAvailabilityOfSensors() {
-        if (oStorageManager != null && oAcceleroMeter != null && oGyroscope != null) {
-            return true;
-        }
-        return false;
+        return oStorageManager != null && oAcceleroMeter != null && oGyroscope != null;
     }
 
     /**
@@ -553,8 +564,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     private boolean hasSensorDataObjectKeyPressedElement() {
-        if (oData == null) return false;
-        return !(oData.keyPressed == null ? "NONE" : oData.keyPressed).equals("NONE");
+        return oData != null && !(oData.keyPressed == null ? "NONE" : oData.keyPressed).equals("NONE");
     }
 
     /*
