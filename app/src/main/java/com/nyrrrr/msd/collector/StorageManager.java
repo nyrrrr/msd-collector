@@ -19,7 +19,7 @@ import java.util.List;
 
 class StorageManager {
 
-    private static final String STRING_CSV_FILE_NAME = "training-data.csv";
+    private static final String STRING_CSV_FILE_NAME = "training-data-set.csv";
 
     private static StorageManager oInstance = null;
 
@@ -38,7 +38,7 @@ class StorageManager {
 
     void addSensorDataLogEntry(SensorData pData) {
         oSensorDataList.add(pData);
-        if(pData.keyPressed != null) Log.d("CSV", pData.toCSVString());
+         Log.d("CSV", pData.toCSVString());
     }
 
     /**
@@ -50,10 +50,10 @@ class StorageManager {
      */
     void storeData(Context pAppContext) throws IOException {
 
-        String fileName = oSensorDataList.get(0).timestamp + "-";
+        String fileName = oSensorDataList.get(0).timestamp + "-" + STRING_CSV_FILE_NAME;
 
         // write csv
-        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_CSV_FILE_NAME, true);
+        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName, true);
         BufferedWriter bw = new BufferedWriter(file);
         PrintWriter out = new PrintWriter(bw);
 

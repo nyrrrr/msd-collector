@@ -28,7 +28,7 @@ import java.util.Collections;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 30; // 30 pairs per key
+    private static final int INTEGER_MAX_DATA_LOGGED = 50;
 
     private static final String STRING_KEYCODES_ONLY = "Keys";
     private static final String CAPTURE_BUTTON_CAPTURE_TEXT = "Sensor+Keys";
@@ -63,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private MachineState fsmState;
     private boolean bIsStoppingCaptureMode = false;
+
+    private int iSensorDataWithoutKeyInformationCount = 0;
 
     /*
      * standard methods
@@ -102,6 +104,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 oData.gamma = pSensorEvent.values[2];
             }
             if (isSensorDataObjectComplete(oData)) {
+                if(oData.keyPressed == null) {
+                    if(iSensorDataWithoutKeyInformationCount >= INTEGER_MAX_DATA_LOGGED) return;
+                    iSensorDataWithoutKeyInformationCount++;
+                }
                 oStorageManager.addSensorDataLogEntry(oData);
                 oData = null;
             }
@@ -163,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     iNextButton = determineNextButtonToClick(aButtonPressOrder);
                     // enough samples?
                     if (iNextButton == INTEGER_BUTTON_LIST_CLEARED) {
-                        stopCaptureMode(oData);
+                        stopCaptureMode();
                     } else {
                         displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
                     }
@@ -274,14 +280,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /**
      * unset flag for data capture
-     *
-     * @param pData SensorData object that needs to be logged before saving
      */
-    private void stopCaptureMode(SensorData pData) {
-        //TODO
+    private void stopCaptureMode() {
         bIsStoppingCaptureMode = true;
-
-        // TODO start save mode
     }
 
     /**
