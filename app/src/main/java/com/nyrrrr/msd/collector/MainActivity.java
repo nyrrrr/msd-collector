@@ -28,7 +28,8 @@ import java.util.Collections;
  */
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int INTEGER_MAX_DATA_LOGGED = 30; // 30 pairs per key
+    private static final int INTEGER_MAX_DATA_LOGGED = 2; // 30 pairs per key
+    private static final int INTEGER_VALIDATION_DATA_LOGGED = 1;
 
     private static final String STRING_KEYCODES_ONLY = "Keys";
     private static final String CAPTURE_BUTTON_CAPTURE_TEXT = "Sensor+Keys";
@@ -102,7 +103,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 oData.gamma = pSensorEvent.values[2];
             }
             if (isSensorDataObjectComplete(oData)) {
-                oStorageManager.addSensorDataLogEntry(oData);
+                if ((aButtonPressOrder.size() + 1) >= (buttonList.length * INTEGER_VALIDATION_DATA_LOGGED)) {
+                    oStorageManager.addSensorDataLogEntry(oData, StorageManager.INTEGER_TRAINING);
+                } else {
+                    oStorageManager.addSensorDataLogEntry(oData, StorageManager.INTEGER_VALIDATION);
+                }
                 oData = null;
             }
             if (bIsStoppingCaptureMode) {
@@ -140,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (fsmState == MachineState.KEYLOGGER) { // KEYLOGGER
 
                     // log data
-                    oStorageManager.addSensorDataLogEntry(oData);
+                    oStorageManager.addSensorDataLogEntry(oData, StorageManager.INTEGER_TRAINING);
                     oData = null; // reset after add
                     updateButtonPressTextView(uTextView, aButtonPressOrder);
 
@@ -163,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     iNextButton = determineNextButtonToClick(aButtonPressOrder);
                     // enough samples?
                     if (iNextButton == INTEGER_BUTTON_LIST_CLEARED) {
-                        stopCaptureMode(oData);
+                        stopCaptureMode();
                     } else {
                         displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
                     }
@@ -267,21 +272,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void prepareKeyboardForLogging() {
         // determine first button
-        aButtonPressOrder = createButtonOrder(INTEGER_MAX_DATA_LOGGED);
+        aButtonPressOrder = createButtonOrder(INTEGER_MAX_DATA_LOGGED, INTEGER_VALIDATION_DATA_LOGGED);
         iNextButton = determineNextButtonToClick(aButtonPressOrder);
         displayNextButtonOnKeyboard(iNextButton, iCurrentButton);
     }
 
     /**
      * unset flag for data capture
-     *
-     * @param pData SensorData object that needs to be logged before saving
      */
-    private void stopCaptureMode(SensorData pData) {
-        //TODO
+    private void stopCaptureMode() {
         bIsStoppingCaptureMode = true;
-
-        // TODO start save mode
     }
 
     /**
@@ -321,14 +321,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /**
      * Create a list of button presses with no runs longer than n = 2;
      *
-     * @param pNumberOfLogsPerKey determineshow often each key needs to be pressed
+     * @param pNumberOfLogsPerKey   determineshow often each key needs to be pressed
+     * @param pValidationDataLogged validation data
      */
-    private ArrayList<Integer> createButtonOrder(int pNumberOfLogsPerKey) {
-        aButtonPressOrder = new ArrayList<>(10 * pNumberOfLogsPerKey);
-        ArrayList<Integer> subList = new ArrayList<>(10);
+    private ArrayList<Integer> createButtonOrder(int pNumberOfLogsPerKey, int pValidationDataLogged) {
+        aButtonPressOrder = new ArrayList<>(buttonList.length * pNumberOfLogsPerKey);
+        ArrayList<Integer> subList = new ArrayList<>(buttonList.length);
 
-        for (int i = 0; i < INTEGER_MAX_DATA_LOGGED; i++) {
-            for (int j = 0; j < 10; j++) {
+        for (int i = 0; i < (pNumberOfLogsPerKey + pValidationDataLogged); i++) {
+            for (int j = 0; j < buttonList.length; j++) {
                 subList.add(j);
             }
             Collections.shuffle(subList);
@@ -488,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void activateButtonPressTextView(TextView pTextView) {
         if (pTextView == null) pTextView = initTextView();
-        pTextView.setText(MessageFormat.format("{0}{1}", new Object[]{STRING_KEYPRESSES_LEFT, 10 * INTEGER_MAX_DATA_LOGGED}));
+        pTextView.setText(MessageFormat.format("{0}{1}", new Object[]{STRING_KEYPRESSES_LEFT, buttonList.length * (INTEGER_MAX_DATA_LOGGED + INTEGER_VALIDATION_DATA_LOGGED)}));
         pTextView.setVisibility(View.VISIBLE);
     }
 

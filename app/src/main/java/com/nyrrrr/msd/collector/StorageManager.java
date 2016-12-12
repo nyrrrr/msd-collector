@@ -19,14 +19,19 @@ import java.util.List;
 
 class StorageManager {
 
-    private static final String STRING_CSV_FILE_NAME = "training-data.csv";
+    private static final String STRING_CSV_FILE_NAME_TRAINING = "data-training.csv";
+    private static final String STRING_CSV_FILE_NAME_VALIDATION = "data-validation.csv";
+    static final int INTEGER_TRAINING = 0;
+    static final int INTEGER_VALIDATION = 1;
 
     private static StorageManager oInstance = null;
 
     private List<SensorData> oSensorDataList;
+    private List<SensorData> oSensorDataValidationList;
 
     private StorageManager() {
         oSensorDataList = new ArrayList<>();
+        oSensorDataValidationList = new ArrayList<>();
     }
 
     static StorageManager getInstance() {
@@ -36,9 +41,13 @@ class StorageManager {
         return oInstance;
     }
 
-    void addSensorDataLogEntry(SensorData pData) {
-        oSensorDataList.add(pData);
-        if(pData.keyPressed != null) Log.d("CSV", pData.toCSVString());
+    void addSensorDataLogEntry(SensorData pData, int pMode) {
+        if(pMode == INTEGER_TRAINING) {
+            oSensorDataList.add(pData);
+        } else if(pMode == INTEGER_VALIDATION) {
+            oSensorDataValidationList.add(pData);
+        }
+        if (pData.keyPressed != null) Log.d("CSV" + pMode, pData.toCSVString());
     }
 
     /**
@@ -50,21 +59,33 @@ class StorageManager {
      */
     void storeData(Context pAppContext) throws IOException {
 
-        String fileName = oSensorDataList.get(0).timestamp + "-";
+        String fileName = oSensorDataList.get(0).timestamp + "-" + STRING_CSV_FILE_NAME_TRAINING;
 
-        // write csv
-        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName + STRING_CSV_FILE_NAME, true);
+        // write training data csv
+        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName, true);
         BufferedWriter bw = new BufferedWriter(file);
         PrintWriter out = new PrintWriter(bw);
 
         out.println(oSensorDataList.get(0).getCsvHeaders());
-        for(SensorData dataObject : oSensorDataList) {
+        for (SensorData dataObject : oSensorDataList) {
             out.print(dataObject.toCSVString());
         }
+        out.close();
+        Log.d("Training Data logged", oSensorDataList.size() + "");
 
+        // write validation data csv
+        fileName = oSensorDataList.get(0).timestamp + "-" + STRING_CSV_FILE_NAME_VALIDATION;
+        file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName, true);
+        bw = new BufferedWriter(file);
+        out = new PrintWriter(bw);
+
+        out.println(oSensorDataList.get(0).getCsvHeaders());
+        for (SensorData dataObject : oSensorDataList) {
+            out.print(dataObject.toCSVString());
+        }
         out.close();
 
-        Log.d("Data logged", oSensorDataList.size() + "");
+        Log.d("Validation Data logged", oSensorDataValidationList.size() + "");
 
         oSensorDataList = new ArrayList<>(); // reset list
     }
