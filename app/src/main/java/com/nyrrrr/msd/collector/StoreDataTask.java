@@ -16,7 +16,7 @@ class StoreDataTask extends AsyncTask {
     protected Object doInBackground(Object[] pObjects) {
         StorageManager storeManager = StorageManager.getInstance();
         try {
-            storeManager.storeData((Context) pObjects[0]);
+            storeManager.storeData((Context) pObjects[0], (boolean) pObjects[1]);
         } catch (IOException e) {
             e.printStackTrace();
             return e;

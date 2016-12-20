@@ -7,6 +7,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,14 +20,18 @@ import java.util.List;
 
 class StorageManager {
 
-    private static final String STRING_CSV_FILE_NAME = "training-data-set.csv";
+    private static final String STRING_SENSOR_TRAINING_CSV_FILE_NAME = "sensor-dataset-training-raw.csv";
+    private static final String STRING_KEY_TRAINING_CSV_FILE_NAME = "key-dataset-training-raw.csv";
+    private static final String STRING_KEY_TESTING_CSV_FILE_NAME = "key-dataset-test-raw.csv";
 
     private static StorageManager oInstance = null;
 
     private List<SensorData> oSensorDataList;
+    private List<KeyData> oKeyDataList;
 
     private StorageManager() {
         oSensorDataList = new ArrayList<>();
+        oKeyDataList = new ArrayList<>();
     }
 
     static StorageManager getInstance() {
@@ -38,7 +43,12 @@ class StorageManager {
 
     void addSensorDataLogEntry(SensorData pData) {
         oSensorDataList.add(pData);
-         Log.d("CSV", pData.toCSVString());
+        Log.d("Sensor", pData.toCSVString());
+    }
+
+    void addKeyDataLogEntry(KeyData pData) {
+        oKeyDataList.add(pData);
+        Log.d("Key", pData.toCSVString());
     }
 
     /**
@@ -48,23 +58,40 @@ class StorageManager {
      * @param pAppContext app context
      * @throws IOException
      */
-    void storeData(Context pAppContext) throws IOException {
+    void storeData(Context pAppContext, boolean isTrainingData) throws IOException {
 
-        String fileName = oSensorDataList.get(0).timestamp + "-" + STRING_CSV_FILE_NAME;
+        String fileName;
+        FileWriter file;
+        BufferedWriter bw;
+        PrintWriter out;
+        SimpleDateFormat date = new SimpleDateFormat("yyMMddHH");
+        String filenamePrefix = date.format(new java.sql.Timestamp(System.currentTimeMillis()));
+        if (isTrainingData) {
+            // write sensor csv file
+            fileName = filenamePrefix + "-" + STRING_SENSOR_TRAINING_CSV_FILE_NAME;
+            file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName, true);
+            bw = new BufferedWriter(file);
+            out = new PrintWriter(bw);
 
-        // write csv
-        FileWriter file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName, true);
-        BufferedWriter bw = new BufferedWriter(file);
-        PrintWriter out = new PrintWriter(bw);
+            out.println(oSensorDataList.get(0).getCsvHeaders());
+            for (SensorData dataObject : oSensorDataList) {
+                out.print(dataObject.toCSVString());
+            }
+            out.close();
+        }
+        // write key csv file
+        fileName = filenamePrefix + "-" + (isTrainingData ? STRING_KEY_TRAINING_CSV_FILE_NAME : STRING_KEY_TESTING_CSV_FILE_NAME); // TODO
+        file = new FileWriter(pAppContext.getFilesDir().getPath() + "/" + fileName, true);
+        bw = new BufferedWriter(file);
+        out = new PrintWriter(bw);
 
-        out.println(oSensorDataList.get(0).getCsvHeaders());
-        for(SensorData dataObject : oSensorDataList) {
+        out.println(oKeyDataList.get(0).getCsvHeaders());
+        for (KeyData dataObject : oKeyDataList) {
             out.print(dataObject.toCSVString());
         }
-
         out.close();
 
-        Log.d("Data logged", oSensorDataList.size() + "");
+        Log.d("Data logged", oKeyDataList.size() + "");
 
         oSensorDataList = new ArrayList<>(); // reset list
     }
