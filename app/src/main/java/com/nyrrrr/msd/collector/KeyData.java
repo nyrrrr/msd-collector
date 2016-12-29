@@ -8,15 +8,11 @@ package com.nyrrrr.msd.collector;
 class KeyData {
 
     String keyPressed;
-    private long downTime;
-    long eventTime;
+    long downTime; // time the key was pressed
+    long eventTime; // time the key was released
 
-    KeyData() {
-        this(System.currentTimeMillis());
-    }
-
-    private KeyData(long pTimeStamp) {
-        downTime = pTimeStamp;
+    KeyData(long pTimeStamp) {
+        downTime = pTimeStamp * 1000000;
     }
 
     String toCSVString() {

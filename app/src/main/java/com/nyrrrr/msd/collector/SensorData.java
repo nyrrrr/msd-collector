@@ -20,11 +20,7 @@ class SensorData {
     private long timestamp;
 
 
-    SensorData () {
-        this(System.currentTimeMillis());
-    }
-
-    private SensorData(long pTimeStamp) {
+    SensorData(long pTimeStamp) {
         timestamp = pTimeStamp;
     }
 
