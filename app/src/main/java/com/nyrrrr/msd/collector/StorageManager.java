@@ -20,9 +20,9 @@ import java.util.List;
 
 class StorageManager {
 
-    private static final String STRING_SENSOR_TRAINING_CSV_FILE_NAME = "sensor-dataset-training-raw.csv";
-    private static final String STRING_KEY_TRAINING_CSV_FILE_NAME = "key-dataset-training-raw.csv";
-    private static final String STRING_KEY_TESTING_CSV_FILE_NAME = "key-dataset-test-raw.csv";
+    private static final String STRING_SENSOR_TRAINING_CSV_FILE_NAME = "sensor-dataset-training-RAW.csv";
+    private static final String STRING_KEY_TRAINING_CSV_FILE_NAME = "key-dataset-training-RAW.csv";
+    private static final String STRING_KEY_TESTING_CSV_FILE_NAME = "key-dataset-test-RAW.csv";
 
     private static StorageManager oInstance = null;
 
