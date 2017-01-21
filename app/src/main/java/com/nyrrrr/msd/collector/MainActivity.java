@@ -22,8 +22,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import static android.hardware.Sensor.TYPE_ORIENTATION;
-
 /**
  * Main Class
  * When Capture mode is enabled, sensor data are being logged.
@@ -52,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorData oSensorData;
     private KeyData oKeyData;
     private Sensor oGyroscope;
-    private Sensor oAcceleroMeter;
+    private Sensor oLinAcceleroMeter;
     private Button[] buttonList;
     private Button uKeyCodesOnlyButton;
     private Button uCaptureButton;
@@ -68,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private MachineState fsmState;
 
     private int iNumberOfLogs;
-    private Sensor oOrientation;
+    private Sensor oAccelerometer;
 
     /*
      * standard methods
@@ -96,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         if (fsmState == MachineState.CAPTURE) {
             // create new data object
-            if (oSensorData == null) oSensorData = new SensorData(pSensorEvent.timestamp);
+            if (oSensorData == null) oSensorData = new SensorData(System.currentTimeMillis());
             // fill data obj
             if (pSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
                 oSensorData.x = pSensorEvent.values[0];
@@ -106,10 +104,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 oSensorData.a = pSensorEvent.values[0];
                 oSensorData.b = pSensorEvent.values[1];
                 oSensorData.c = pSensorEvent.values[2];
-            } else if (pSensorEvent.sensor.getType() == Sensor.TYPE_ORIENTATION) {
-                oSensorData.alpha = pSensorEvent.values[0];
-                oSensorData.beta = pSensorEvent.values[1];
-                oSensorData.gamma = pSensorEvent.values[2];
+            } else if (pSensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                oSensorData.x_ra = pSensorEvent.values[0];
+                oSensorData.y_ra = pSensorEvent.values[1];
+                oSensorData.z_ra = pSensorEvent.values[2];
             }
             if (isSensorDataObjectComplete(oSensorData)) {
                 oStorageManager.addSensorDataLogEntry(oSensorData);
@@ -119,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private boolean isSensorDataObjectComplete(SensorData pData) {
-        return oSensorData != null && pData.x != 0 && pData.y != 0 && pData.z != 0 && pData.alpha != 0 && pData.beta != 0 && pData.gamma != 0 && pData.a != 0 && pData.b != 0 && pData.c != 0;
+        return oSensorData != null && pData.x != 0 && pData.y != 0 && pData.z != 0 && pData.x_ra != 0 && pData.y_ra != 0 && pData.z_ra != 0 && pData.a != 0 && pData.b != 0 && pData.c != 0;
     }
 
     /**
@@ -133,10 +131,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (iNextButton == Integer.parseInt(pView.getText().toString())) {
             // create data object
             if (pMotionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                oKeyData = createDataObject(iNextButton, pMotionEvent.getEventTime());
+                oKeyData = createDataObject(iNextButton, System.currentTimeMillis());
             } else if (pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
 
-                oKeyData.eventTime = pMotionEvent.getEventTime() * 1000000;
+                oKeyData.eventTime = System.currentTimeMillis();
 
                 oStorageManager.addKeyDataLogEntry(oKeyData);
                 oKeyData = null; // reset
@@ -160,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Create SensorData object for KEYLOGGER mode
      *
      * @param pKey       key info
-     * @param pEventTime
+     * @param pEventTime timestamp
      * @return SensorData
      */
     private KeyData createDataObject(int pKey, long pEventTime) {
@@ -198,9 +196,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             // init sensors & persistence
             initStorageManager();
-            initAccelerometerSensor();
+            initLinearAccelerometerSensor();
             initGyroscopeSensor();
-            initOrientationSensor();
+            initAccelerometerSensor();
         } else {
             if (fsmState.possibleFollowUps().contains(MachineState.INIT)) {
                 fsmState = MachineState.INIT;
@@ -337,18 +335,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Register sensor listeners
      */
     private void registerSensorListeners() {
-        oSensorManager.registerListener(this, oAcceleroMeter, GLOBAL_SENSOR_SPEED);
+        oSensorManager.registerListener(this, oLinAcceleroMeter, GLOBAL_SENSOR_SPEED);
         oSensorManager.registerListener(this, oGyroscope, GLOBAL_SENSOR_SPEED);
-        oSensorManager.registerListener(this, oOrientation, GLOBAL_SENSOR_SPEED);
+        oSensorManager.registerListener(this, oAccelerometer, GLOBAL_SENSOR_SPEED);
     }
 
     /**
      * unregister sensor listeners
      */
     private void unregisterSensorListeners() {
-        oSensorManager.unregisterListener(this, oAcceleroMeter);
+        oSensorManager.unregisterListener(this, oLinAcceleroMeter);
         oSensorManager.unregisterListener(this, oGyroscope);
-        oSensorManager.unregisterListener(this, oOrientation);
+        oSensorManager.unregisterListener(this, oAccelerometer);
     }
 
     /*
@@ -534,7 +532,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private boolean checkAvailabilityOfSensors() {
-        return oStorageManager != null && oAcceleroMeter != null && oGyroscope != null;
+        return oStorageManager != null && oLinAcceleroMeter != null && oGyroscope != null;
     }
 
     /**
@@ -560,18 +558,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * Set-up of accelerometer sensor for data capturing.
      * Registers EventListener.
      */
-    private void initAccelerometerSensor() {
+    private void initLinearAccelerometerSensor() {
         initSensorReader();
-        oAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
+        oLinAcceleroMeter = oSensorReader.getSingleSensorOfType(Sensor.TYPE_LINEAR_ACCELERATION);
     }
 
-    private void initOrientationSensor() {
+    private void initAccelerometerSensor() {
         initSensorReader();
-        oOrientation = oSensorReader.getSingleSensorOfType(TYPE_ORIENTATION);
+        oAccelerometer = oSensorReader.getSingleSensorOfType(Sensor.TYPE_ACCELEROMETER);
     }
 
     /**
-     * Set-up of Gyroscope sensor. Orientation data will be captured during runtime and
+     * Set-up of Gyroscope sensor. data will be captured during runtime and
      * combined with the accelerometer data.
      */
     private void initGyroscopeSensor() {
