@@ -12,7 +12,7 @@ class KeyData {
     long eventTime; // time the key was released
 
     KeyData(long pTimeStamp) {
-        downTime = pTimeStamp * 1000000;
+        downTime = pTimeStamp;
     }
 
     String toCSVString() {

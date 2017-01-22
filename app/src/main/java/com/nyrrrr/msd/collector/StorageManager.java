@@ -94,6 +94,7 @@ class StorageManager {
         Log.d("Data logged", oKeyDataList.size() + "");
 
         oSensorDataList = new ArrayList<>(); // reset list
+        oKeyDataList = new ArrayList<>(); // reset
     }
 
     /**

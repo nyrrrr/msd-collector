@@ -29,7 +29,7 @@ import java.util.Collections;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private static final int INTEGER_MAX_DATA_LOGGED = 50;
-    private static final int INTEGER_MAX_DATA_LOGGED_KEYLOGGER_MODE = 5;
+    private static final int INTEGER_MAX_DATA_LOGGED_KEYLOGGER_MODE = 10;
 
     private static final String STRING_KEYCODES_ONLY = "Keys";
     private static final String CAPTURE_BUTTON_CAPTURE_TEXT = "Sensor+Keys";
@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private int iNumberOfLogs;
     private Sensor oAccelerometer;
+    private Sensor oOrientation;
 
     /*
      * standard methods
@@ -104,7 +105,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 oSensorData.a = pSensorEvent.values[0];
                 oSensorData.b = pSensorEvent.values[1];
                 oSensorData.c = pSensorEvent.values[2];
-            } else if (pSensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            } else if (pSensorEvent.sensor.getType() == Sensor.TYPE_ORIENTATION) {
+                oSensorData.alpha = pSensorEvent.values[0];
+                oSensorData.beta = pSensorEvent.values[1];
+                oSensorData.gamma = pSensorEvent.values[2];
+            } else  {
                 oSensorData.x_ra = pSensorEvent.values[0];
                 oSensorData.y_ra = pSensorEvent.values[1];
                 oSensorData.z_ra = pSensorEvent.values[2];
@@ -117,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private boolean isSensorDataObjectComplete(SensorData pData) {
-        return oSensorData != null && pData.x != 0 && pData.y != 0 && pData.z != 0 && pData.x_ra != 0 && pData.y_ra != 0 && pData.z_ra != 0 && pData.a != 0 && pData.b != 0 && pData.c != 0;
+        return oSensorData != null && pData.x != 0 && pData.y != 0 && pData.z != 0 && pData.alpha != 0 && pData.beta != 0 && pData.gamma != 0 && pData.a != 0 && pData.b != 0 && pData.c != 0 && pData.x_ra != 0 && pData.y_ra != 0 && pData.z_ra != 0;
     }
 
     /**
@@ -199,6 +204,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             initLinearAccelerometerSensor();
             initGyroscopeSensor();
             initAccelerometerSensor();
+            initOrientationSensor();
         } else {
             if (fsmState.possibleFollowUps().contains(MachineState.INIT)) {
                 fsmState = MachineState.INIT;
@@ -338,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager.registerListener(this, oLinAcceleroMeter, GLOBAL_SENSOR_SPEED);
         oSensorManager.registerListener(this, oGyroscope, GLOBAL_SENSOR_SPEED);
         oSensorManager.registerListener(this, oAccelerometer, GLOBAL_SENSOR_SPEED);
+        oSensorManager.registerListener(this, oOrientation, GLOBAL_SENSOR_SPEED);
     }
 
     /**
@@ -347,6 +354,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oSensorManager.unregisterListener(this, oLinAcceleroMeter);
         oSensorManager.unregisterListener(this, oGyroscope);
         oSensorManager.unregisterListener(this, oAccelerometer);
+        oSensorManager.unregisterListener(this, oOrientation);
     }
 
     /*
@@ -566,6 +574,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void initAccelerometerSensor() {
         initSensorReader();
         oAccelerometer = oSensorReader.getSingleSensorOfType(Sensor.TYPE_ACCELEROMETER);
+    }
+
+    private void initOrientationSensor() {
+        initSensorReader();
+        oOrientation = oSensorReader.getSingleSensorOfType(Sensor.TYPE_ORIENTATION);
     }
 
     /**

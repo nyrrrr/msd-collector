@@ -18,6 +18,9 @@ class SensorData {
     float y_ra; // y_ra
     float z_ra; // z_ra
     private long timestamp;
+    float alpha;
+    float beta;
+    float gamma;
 
 
     SensorData(long pTimeStamp) {
@@ -28,10 +31,11 @@ class SensorData {
         return timestamp + ","
                 + x + "," + y + "," + z + ","
                 + a + "," + b + "," + c + ","
+                + alpha + "," + beta + "," + gamma + ","
                 + x_ra + "," + y_ra + "," + z_ra + "\n";
     }
 
     String getCsvHeaders() {
-        return "Timestamp,x,y,z,a,b,c,x_ra,y_ra,z_ra";
+        return "Timestamp,x,y,z,a,b,c,alpha,beta,gamma,x_ra,y_ra,z_ra";
     }
 }
