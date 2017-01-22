@@ -64,7 +64,7 @@ class StorageManager {
         FileWriter file;
         BufferedWriter bw;
         PrintWriter out;
-        SimpleDateFormat date = new SimpleDateFormat("yyMMddHH");
+        SimpleDateFormat date = new SimpleDateFormat("yyMMddHHmm");
         String filenamePrefix = date.format(new java.sql.Timestamp(System.currentTimeMillis()));
         if (isTrainingData) {
             // write sensor csv file

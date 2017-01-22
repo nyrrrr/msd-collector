@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         if (fsmState == MachineState.CAPTURE) {
             // create new data object
-            if (oSensorData == null) oSensorData = new SensorData(System.currentTimeMillis());
+            if (oSensorData == null) oSensorData = new SensorData(System.nanoTime());
             // fill data obj
             if (pSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
                 oSensorData.x = pSensorEvent.values[0];
@@ -136,10 +136,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (iNextButton == Integer.parseInt(pView.getText().toString())) {
             // create data object
             if (pMotionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                oKeyData = createDataObject(iNextButton, System.currentTimeMillis());
+                oKeyData = createDataObject(iNextButton, System.nanoTime());
             } else if (pMotionEvent.getAction() == MotionEvent.ACTION_UP) {
 
-                oKeyData.eventTime = System.currentTimeMillis();
+                oKeyData.eventTime = System.nanoTime();
 
                 oStorageManager.addKeyDataLogEntry(oKeyData);
                 oKeyData = null; // reset
